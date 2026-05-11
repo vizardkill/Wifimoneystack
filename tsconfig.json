@@ -1,0 +1,42 @@
+{
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    "**/.server/**/*.ts",
+    "**/.server/**/*.tsx",
+    "**/.client/**/*.ts",
+    "**/.client/**/*.tsx",
+    ".react-router/types/**/*"
+  ],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["@react-router/node", "vite/client"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "target": "ES2022",
+    "strict": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@components/*": ["./app/components/*"],
+      "@utils": ["./app/lib/utils.ts"],
+      "@ui/*": ["./app/components/ui/*"],
+      "@lib/*": ["./app/lib/*"],
+      "@hooks/*": ["./app/hooks/*"],
+      "@types": ["./app/lib/types"],
+      "@functions/*": ["./app/lib/functions/*"],
+      "@server/*": ["./server/*"],
+      "@routes/*": ["./app/routes/*"],
+      "@modules/*": ["./app/modules/*"],
+      "@/*": ["./app/*"]
+    },
+    "noEmit": true,
+    "rootDirs": [".", "./.react-router/types"]
+  }
+}

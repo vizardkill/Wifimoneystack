@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentación</title>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-vsc-dark-plus.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/light.css" />
+    <link rel="stylesheet" href="./docs.css" />
+  </head>
+
+  <body>
+    <div id="app">Cargando documentación...</div>
+    <script>
+      window.$docsify = {
+        name: 'Marketplace Ecommerce Docs',
+        repo: '',
+        loadSidebar: true,
+        subMaxLevel: 2,
+        search: 'auto',
+        mermaidConfig: {
+          querySelector: '.mermaid'
+        },
+        search: {
+          placeholder: 'Buscar...',
+          noData: 'No se encontraron resultados'
+        },
+        'flexible-alerts': {
+          style: 'flat',
+          note: { label: 'Nota' },
+          tip: { label: 'Consejo' },
+          warning: { label: 'Advertencia' },
+          attention: { label: 'Atención' }
+        },
+        pagination: {
+          previousText: 'Anterior',
+          nextText: 'Siguiente',
+          crossChapter: true,
+          crossChapterText: true
+        },
+        toc: {
+          tocMaxLevel: 5,
+          target: 'h2, h3, h4, h5, h6',
+          ignoreHeaders: ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->']
+        },
+        count: {
+          countable: true,
+          position: 'top',
+          margin: '10px',
+          float: 'right',
+          fontsize: '0.9em',
+          color: 'rgb(90,90,90)',
+          localization: {
+            words: 'palabras',
+            minute: 'minutos'
+          },
+          isExpected: true
+        },
+        copyCode: {
+          buttonText: 'Copiar al portapapeles',
+          errorText: 'Error',
+          successText: 'Copiado'
+        }
+      }
+    </script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+    <script src="https:///prismjs@v1.30.0/components/prism-core.min.js"></script>
+    <script src="https:///prismjs@v1.30.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
+    <script src="//unpkg.com/docsify-plugin-flexible-alerts"></script>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs'
+
+      mermaid.initialize({ startOnLoad: true })
+      window.mermaid = mermaid
+    </script>
+    <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+    <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+    <script src="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/docsify-plugin-toc.min.js"></script>
+    <script src="//unpkg.com/docsify-count/dist/countable.min.js"></script>
+    <script src="https://unpkg.com/docsify-copy-code"></script>
+
+    <script>
+      function enhanceOperatorColors() {
+        const operators = document.querySelectorAll('.token.operator')
+
+        operators.forEach((op) => {
+          const text = op.textContent.trim()
+
+          const codeBlock = op.closest('pre[data-lang*="typescript"], pre[data-lang*="ts"], pre[data-lang*="javascript"], pre[data-lang*="js"]')
+          if (!codeBlock) return
+
+          op.classList.remove('comparison-op', 'logical-op', 'arrow-op', 'assignment-op', 'type-op')
+
+          if (['===', '!==', '==', '!='].includes(text)) {
+            op.classList.add('comparison-op')
+          } else if (['&&', '||'].includes(text)) {
+            op.classList.add('logical-op')
+          } else if (text === '=>') {
+            op.classList.add('arrow-op')
+          } else if (['=', '+=', '-=', '*=', '/=', '%='].includes(text)) {
+            op.classList.add('assignment-op')
+          } else if (text === ':' || (text === '!' && !text.includes('!=') && !text.includes('!=='))) {
+            op.classList.add('type-op')
+          }
+        })
+
+        const sqlCodeBlocks = document.querySelectorAll('pre[data-lang*="sql"] code')
+        sqlCodeBlocks.forEach((codeBlock) => {
+          const sqlDataTypes = [
+            'UUID',
+            'VARCHAR',
+            'TEXT',
+            'INT',
+            'INTEGER',
+            'FLOAT',
+            'DOUBLE',
+            'DECIMAL',
+            'NUMERIC',
+            'BOOLEAN',
+            'BOOL',
+            'DATE',
+            'TIME',
+            'TIMESTAMP',
+            'DATETIME',
+            'CHAR',
+            'BINARY',
+            'VARBINARY',
+            'BLOB',
+            'JSON',
+            'JSONB',
+            'ENUM',
+            'ARRAY'
+          ]
+
+          const spans = codeBlock.querySelectorAll('span')
+          spans.forEach((span) => {
+            const text = span.textContent.trim()
+            if (sqlDataTypes.includes(text.toUpperCase()) && !span.classList.contains('token')) {
+              span.classList.add('token', 'datatype')
+            } else if (/^[a-z_][a-z0-9_]*$/i.test(text) && text.length > 2 && !span.classList.contains('token')) {
+              const keywords = ['PRIMARY', 'KEY', 'NOT', 'NULL', 'DEFAULT', 'UNIQUE', 'FOREIGN', 'REFERENCES', 'ON', 'DELETE', 'CASCADE', 'UPDATE', 'RESTRICT']
+              if (!keywords.includes(text.toUpperCase())) {
+                span.classList.add('token', 'variable')
+              }
+            }
+          })
+
+          let html = codeBlock.innerHTML
+
+          sqlDataTypes.forEach((dataType) => {
+            const regex = new RegExp(`\\b${dataType}\\b(?![^<]*</span>)`, 'gi')
+            html = html.replace(regex, `<span class="token datatype">${dataType.toUpperCase()}</span>`)
+          })
+
+          const lines = html.split('\n')
+          const processedLines = lines.map((line) => {
+            const columnMatch = line.match(/^(\s*)([a-z_][a-z0-9_]*)([\s]+)/i)
+            if (columnMatch) {
+              const [fullMatch, leadingSpaces, columnName, trailingSpaces] = columnMatch
+              const keywords = [
+                'PRIMARY',
+                'KEY',
+                'NOT',
+                'NULL',
+                'DEFAULT',
+                'UNIQUE',
+                'FOREIGN',
+                'REFERENCES',
+                'ON',
+                'DELETE',
+                'CASCADE',
+                'UPDATE',
+                'RESTRICT',
+                'ENUM',
+                'STATUS',
+                'SELECT',
+                'FROM',
+                'WHERE',
+                'INSERT',
+                'UPDATE',
+                'CREATE',
+                'ALTER',
+                'DROP'
+              ]
+
+              if (!keywords.includes(columnName.toUpperCase()) && columnName.length > 1) {
+                return line.replace(columnMatch[0], `${leadingSpaces}<span class="token variable">${columnName}</span>${trailingSpaces}`)
+              }
+            }
+            return line
+          })
+          html = processedLines.join('\n')
+
+          if (html !== codeBlock.innerHTML && !codeBlock.dataset.sqlProcessed) {
+            codeBlock.innerHTML = html
+            codeBlock.dataset.sqlProcessed = 'true'
+          }
+        })
+
+        const codeBlocks = document.querySelectorAll('pre[data-lang*="typescript"] code, pre[data-lang*="ts"] code')
+        codeBlocks.forEach((codeBlock) => {
+          const textNodes = Array.from(codeBlock.childNodes).filter(
+            (node) => node.nodeType === Node.TEXT_NODE && /^[A-Z][a-zA-Z]*$/.test(node.textContent.trim())
+          )
+
+          textNodes.forEach((node) => {
+            const span = document.createElement('span')
+            span.className = 'probable-type'
+            span.textContent = node.textContent
+            node.parentNode.replaceChild(span, node)
+          })
+
+          const spans = codeBlock.querySelectorAll('span:not([class])')
+          spans.forEach((span) => {
+            const text = span.textContent.trim()
+            if (['RequestStatus', 'PayloadType', 'ResponseType', 'Promise', 'Array', 'Object'].includes(text)) {
+              span.classList.add('custom-type')
+            }
+          })
+        })
+      }
+
+      if (window.$docsify) {
+        window.$docsify.plugins = (window.$docsify.plugins || []).concat([
+          function (hook, vm) {
+            hook.doneEach(function () {
+              setTimeout(enhanceOperatorColors, 100)
+            })
+          }
+        ])
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
+          setTimeout(enhanceOperatorColors, 500)
+        })
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+node_modules
+
+/.cache
+/build
+/build_server
+/app/build
+/public/build/
+/public/_dev
+/app/public/build
+/prisma/dev.sqlite
+/prisma/dev.sqlite-journal
+database.sqlite
+dockerfile.local
+start-docker-local.sh
+.env
+.env.*
+.env.local
+.env.*.local
+/generated/prisma
+.react-router/
+/tmp
+# Archivos locales de OpenClaw/agent (no forman parte del producto)
+.agent-local/
+temp/
+__pycache__/
