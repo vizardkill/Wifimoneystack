@@ -189,8 +189,8 @@ manuales.
 - [x] T050 [P] Documentar el modelo relacional y flujos de base de datos en espanol en `docs/base-de-datos-marketplace.md`
 - [x] T051 [P] Enlazar la documentacion del marketplace en `docs/_sidebar.md` y `docs/README.md`
 - [x] T052 [P] Persistir overrides finales del design system para auth y marketplace en `design-system/pages/auth.md` y `design-system/pages/marketplace.md`
-- [ ] T053 Revisar responsive, accesibilidad, control de acceso y auditoria en `app/routes/`, `app/modules/auth/` y `app/modules/marketplace/`
-- [ ] T054 Ejecutar la validacion manual descrita en `specs/001-apps-marketplace/quickstart.md`
+- [x] T053 Revisar responsive, accesibilidad, control de acceso y auditoria en `app/routes/`, `app/modules/auth/` y `app/modules/marketplace/`
+- [x] T054 Ejecutar la validacion manual descrita en `specs/001-apps-marketplace/quickstart.md`
 - [x] T055 Ejecutar `npm run typecheck`
 - [x] T056 Ejecutar `npm run lint:strict`
 - [x] T057 Ejecutar `npm run format:check`
