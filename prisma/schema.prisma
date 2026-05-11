@@ -1,0 +1,274 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+generator comments {
+  provider = "prisma-db-comments-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Auth Enums ─────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+
+  @@map("role")
+}
+
+// ── Auth Models ────────────────────────────────────────────────────────────────
+
+/// Usuario registrado en el marketplace
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique @db.VarChar(64)
+  first_name     String   @db.VarChar(40)
+  last_name      String   @db.VarChar(40)
+  password       String   @db.VarChar(64)
+  role           Role     @default(USER)
+  email_verified Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  verification_tokens   EmailVerificationToken[]
+  password_reset_tokens PasswordResetToken[]
+  auth_providers        UserAuthProvider[]
+
+  @@index([email])
+  @@map("users")
+}
+
+/// Proveedor de autenticación del usuario (JWT, Google, etc.)
+model UserAuthProvider {
+  id            String   @id @default(uuid())
+  user_id       String
+  provider_type String   @db.VarChar(20)
+  provider_id   String?  @db.VarChar(100)
+  provider_data Json?
+  is_primary    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, provider_type])
+  @@index([user_id])
+  @@index([provider_type])
+  @@index([provider_id])
+  @@map("user_auth_providers")
+}
+
+/// Token para reseteo de contraseña
+model PasswordResetToken {
+  id      String   @id @default(uuid())
+  token   String   @unique
+  expires DateTime
+  user_id String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("password_reset_tokens")
+}
+
+/// Token de verificación de correo electrónico
+model EmailVerificationToken {
+  id      String   @id @default(uuid())
+  token   String   @unique
+  expires DateTime
+  user_id String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("email_verification_tokens")
+}
+
+/// País con código ISO (para selector de auth)
+model Country {
+  id         String   @id
+  name       String   @unique
+  iso_code   String   @unique @db.VarChar(2)
+  is_enabled Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([iso_code])
+  @@index([is_enabled])
+  @@map("countries")
+}
+
+// ── Marketplace Enums ──────────────────────────────────────────────────────────
+
+enum MarketplaceAccessStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum MarketplaceAppStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum MarketplaceAppAccessMode {
+  WEB_LINK
+  PACKAGE_DOWNLOAD
+}
+
+enum MarketplaceMediaType {
+  ICON
+  SCREENSHOT
+  VIDEO
+}
+
+enum MarketplaceUsageEventType {
+  DETAIL_VIEW
+  WEB_OPEN
+  PACKAGE_DOWNLOAD
+  PACKAGE_INSTALL
+}
+
+enum MarketplaceAuditAction {
+  ACCESS_REQUESTED
+  ACCESS_APPROVED
+  ACCESS_REJECTED
+  ACCESS_REVOKED
+  APP_CREATED
+  APP_UPDATED
+  APP_PUBLISHED
+  APP_UNPUBLISHED
+  APP_MEDIA_UPDATED
+  APP_ARTIFACT_UPDATED
+}
+
+// ── Marketplace Models ─────────────────────────────────────────────────────────
+
+/// Solicitud de acceso de usuario al marketplace
+model MarketplaceAccessRequest {
+  id                String                   @id @default(uuid())
+  user_id           String                   @unique
+  status            MarketplaceAccessStatus  @default(PENDING)
+  company_name      String?
+  business_url      String?
+  business_type     String?
+  request_notes     String?
+  decision_reason   String?
+  decided_by_user_id String?
+  decided_at        DateTime?
+  revoked_at        DateTime?
+  created_at        DateTime                 @default(now())
+  updated_at        DateTime                 @updatedAt
+
+  @@index([status, created_at])
+  @@map("marketplace_access_requests")
+}
+
+/// Aplicacion/herramienta listada en el marketplace
+model MarketplaceApp {
+  id                  String                   @id @default(uuid())
+  slug                String                   @unique
+  name                String                   @db.VarChar(120)
+  summary             String
+  description         String
+  instructions        String
+  access_mode         MarketplaceAppAccessMode
+  status              MarketplaceAppStatus     @default(DRAFT)
+  web_url             String?
+  published_at        DateTime?
+  created_by_user_id  String
+  updated_by_user_id  String?
+  created_at          DateTime                 @default(now())
+  updated_at          DateTime                 @updatedAt
+
+  media              MarketplaceAppMedia[]
+  artifacts          MarketplaceAppArtifact[]
+  usage_events       MarketplaceUsageEvent[]
+  audit_events       MarketplaceAuditEvent[]
+
+  @@index([status, access_mode, created_at])
+  @@map("marketplace_apps")
+}
+
+/// Metadata de media (iconos, screenshots, videos) para apps del marketplace
+model MarketplaceAppMedia {
+  id           String               @id @default(uuid())
+  app_id       String
+  type         MarketplaceMediaType
+  storage_key  String
+  public_url   String?
+  alt_text     String?
+  sort_order   Int                  @default(0)
+  created_at   DateTime             @default(now())
+  updated_at   DateTime             @updatedAt
+
+  app          MarketplaceApp       @relation(fields: [app_id], references: [id])
+
+  @@index([app_id, type])
+  @@map("marketplace_app_media")
+}
+
+/// Artefacto (ZIP/paquete) disponible para descarga de una app
+model MarketplaceAppArtifact {
+  id                  String         @id @default(uuid())
+  app_id              String
+  storage_key         String
+  file_name           String
+  mime_type           String
+  size_bytes          BigInt
+  checksum            String?
+  version_label       String?
+  is_active           Boolean        @default(true)
+  created_by_user_id  String
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+
+  app                 MarketplaceApp @relation(fields: [app_id], references: [id])
+
+  @@index([app_id, is_active])
+  @@map("marketplace_app_artifacts")
+}
+
+/// Evento inmutable de uso de una app del marketplace
+model MarketplaceUsageEvent {
+  id         String                    @id @default(uuid())
+  app_id     String
+  user_id    String
+  type       MarketplaceUsageEventType
+  metadata   Json?
+  created_at DateTime                  @default(now())
+
+  app        MarketplaceApp            @relation(fields: [app_id], references: [id])
+
+  @@index([app_id, type, created_at])
+  @@index([user_id, created_at])
+  @@map("marketplace_usage_events")
+}
+
+/// Evento inmutable de auditoria para decisiones admin y de marketplace
+model MarketplaceAuditEvent {
+  id              String                 @id @default(uuid())
+  actor_user_id   String
+  target_user_id  String?
+  app_id          String?
+  action          MarketplaceAuditAction
+  reason          String?
+  metadata        Json?
+  created_at      DateTime               @default(now())
+
+  app             MarketplaceApp?        @relation(fields: [app_id], references: [id])
+
+  @@index([actor_user_id, created_at])
+  @@index([target_user_id, created_at])
+  @@index([app_id, created_at])
+  @@map("marketplace_audit_events")
+}
+

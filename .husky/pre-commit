@@ -1,0 +1,68 @@
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
+staged_js_ts_files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs')
+staged_ts_files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx')
+prisma_triggers=''
+route_typegen_triggers=''
+
+if printf '%s\n' "$staged_files" | grep -Eq '^(prisma/.*\.prisma|prisma\.config\.ts)$'; then
+	prisma_triggers='1'
+fi
+
+if printf '%s\n' "$staged_files" | grep -Eq '^(react-router\.config\.ts|app/routes\.ts|app/routes/.*\.(ts|tsx))$'; then
+	route_typegen_triggers='1'
+fi
+
+if [ -n "$staged_js_ts_files" ]; then
+	violations=$(
+		git diff --cached -U0 -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs' | awk '
+			/^\+\+\+ b\// {
+				file = substr($0, 7)
+				next
+			}
+			/^@@/ {
+				if (match($0, /\+[0-9]+/)) {
+					line = substr($0, RSTART + 1, RLENGTH - 1) - 1
+				}
+				next
+			}
+			/^\+/ && $0 !~ /^\+\+\+/ {
+				line++
+				if ($0 ~ /eslint-disable(-next-line|-line)?/) {
+					printf "%s:%d: %s\n", file, line, substr($0, 2)
+				}
+				next
+			}
+		'
+	)
+
+	if [ -n "$violations" ]; then
+		echo "Error: no se permiten comentarios eslint-disable en archivos staged (.js/.jsx/.ts/.tsx/.mjs/.cjs)."
+		echo "Se encontraron en:"
+		echo "$violations"
+		echo "Elimina el disable o corrige el código para cumplir con ESLint."
+		exit 1
+	fi
+fi
+
+echo "Ejecutando lint-staged..."
+npx lint-staged
+
+if [ -n "$prisma_triggers" ]; then
+	echo "Cambios en Prisma detectados; se valida el esquema y se regenera el cliente."
+	npx prisma validate || exit $?
+	npx prisma generate --generator client || exit $?
+fi
+
+if [ -n "$route_typegen_triggers" ]; then
+	echo "Cambios en rutas detectados; se ejecuta react-router typegen."
+	npx react-router typegen
+	exit_code=$?
+	if [ "$exit_code" -ne 0 ]; then
+		exit "$exit_code"
+	fi
+fi
+
+if [ -n "$staged_ts_files" ]; then
+	echo "Se ejecuta typecheck sobre archivos TS staged."
+	git diff --cached --name-only --diff-filter=ACMR -z -- '*.ts' '*.tsx' | xargs -0 npx tsc-files --noEmit
+fi

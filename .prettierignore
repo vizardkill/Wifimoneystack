@@ -1,0 +1,17 @@
+.cache
+.shadowenv.d
+.vscode
+build
+node_modules
+prisma
+public
+.github
+tmp
+*.yml
+.env
+.env.*
+.shopify
+
+# Ignore generated/release metadata files
+CHANGELOG.md
+package-lock.json

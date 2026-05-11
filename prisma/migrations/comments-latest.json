@@ -1,0 +1,560 @@
+{
+  "users": {
+    "table": {
+      "tableName": "users",
+      "comment": "Usuario registrado en el marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "users",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "email",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "first_name",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "last_name",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "password",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "role",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "email_verified",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "is_active",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "users",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "user_auth_providers": {
+    "table": {
+      "tableName": "user_auth_providers",
+      "comment": "Proveedor de autenticación del usuario (JWT, Google, etc.)"
+    },
+    "columns": [
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "provider_type",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "provider_id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "provider_data",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "is_primary",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "user_auth_providers",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "password_reset_tokens": {
+    "table": {
+      "tableName": "password_reset_tokens",
+      "comment": "Token para reseteo de contraseña"
+    },
+    "columns": [
+      {
+        "tableName": "password_reset_tokens",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "password_reset_tokens",
+        "columnName": "token",
+        "comment": ""
+      },
+      {
+        "tableName": "password_reset_tokens",
+        "columnName": "expires",
+        "comment": ""
+      },
+      {
+        "tableName": "password_reset_tokens",
+        "columnName": "user_id",
+        "comment": ""
+      }
+    ]
+  },
+  "email_verification_tokens": {
+    "table": {
+      "tableName": "email_verification_tokens",
+      "comment": "Token de verificación de correo electrónico"
+    },
+    "columns": [
+      {
+        "tableName": "email_verification_tokens",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "email_verification_tokens",
+        "columnName": "token",
+        "comment": ""
+      },
+      {
+        "tableName": "email_verification_tokens",
+        "columnName": "expires",
+        "comment": ""
+      },
+      {
+        "tableName": "email_verification_tokens",
+        "columnName": "user_id",
+        "comment": ""
+      }
+    ]
+  },
+  "countries": {
+    "table": {
+      "tableName": "countries",
+      "comment": "País con código ISO (para selector de auth)"
+    },
+    "columns": [
+      {
+        "tableName": "countries",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "countries",
+        "columnName": "name",
+        "comment": ""
+      },
+      {
+        "tableName": "countries",
+        "columnName": "iso_code",
+        "comment": ""
+      },
+      {
+        "tableName": "countries",
+        "columnName": "is_enabled",
+        "comment": ""
+      },
+      {
+        "tableName": "countries",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "countries",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_access_requests": {
+    "table": {
+      "tableName": "marketplace_access_requests",
+      "comment": "Solicitud de acceso de usuario al marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "status",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "company_name",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "business_url",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "business_type",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "request_notes",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "decision_reason",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "decided_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "decided_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "revoked_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_access_requests",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_apps": {
+    "table": {
+      "tableName": "marketplace_apps",
+      "comment": "Aplicacion/herramienta listada en el marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "slug",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "name",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "summary",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "description",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "instructions",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "access_mode",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "status",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "web_url",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "published_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "created_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "updated_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_apps",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_app_media": {
+    "table": {
+      "tableName": "marketplace_app_media",
+      "comment": "Metadata de media (iconos, screenshots, videos) para apps del marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "app_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "type",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "storage_key",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "public_url",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "alt_text",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "sort_order",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_media",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_app_artifacts": {
+    "table": {
+      "tableName": "marketplace_app_artifacts",
+      "comment": "Artefacto (ZIP/paquete) disponible para descarga de una app"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "app_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "storage_key",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "file_name",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "mime_type",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "size_bytes",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "checksum",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "version_label",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "is_active",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "created_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_artifacts",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_usage_events": {
+    "table": {
+      "tableName": "marketplace_usage_events",
+      "comment": "Evento inmutable de uso de una app del marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "app_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "type",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "metadata",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_usage_events",
+        "columnName": "created_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_audit_events": {
+    "table": {
+      "tableName": "marketplace_audit_events",
+      "comment": "Evento inmutable de auditoria para decisiones admin y de marketplace"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "actor_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "target_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "app_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "action",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "reason",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "metadata",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_audit_events",
+        "columnName": "created_at",
+        "comment": ""
+      }
+    ]
+  }
+}

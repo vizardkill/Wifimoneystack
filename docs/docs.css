@@ -1,0 +1,382 @@
+.app-name a {
+  background: url("/apple-icon.png") no-repeat center !important;
+  background-size: contain !important;
+  display: block !important;
+  width: 250px !important;
+  height: 180px !important;
+  text-indent: -9999px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  margin: 0 auto !important;
+}
+
+.app-name {
+  margin: 0 !important;
+  padding: 20px 0 !important;
+  text-align: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.docsify-copy-code-button {
+  background: #007acc !important;
+  color: white !important;
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.docsify-copy-code-button:hover {
+  background: #005a9e !important;
+  transform: translateY(-1px) !important;
+}
+
+pre {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  margin: 1.5em 0 !important;
+  position: relative !important;
+  background: #1e1e1e !important;
+}
+
+pre > code {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  background: transparent !important;
+  color: #d4d4d4 !important;
+  font-family: "Consolas", "Monaco", "Courier New", monospace !important;
+}
+
+pre[data-lang*="sql"] .token.comment {
+  color: #6a9955 !important;
+  font-style: italic !important;
+}
+
+pre[data-lang*="sql"] .token.keyword {
+  color: #569cd6 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="sql"] .token.operator {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="sql"] .token.boolean {
+  color: #569cd6 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="sql"] .token.punctuation {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="sql"] .token.string {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="sql"] .token.number {
+  color: #b5cea8 !important;
+}
+
+pre[data-lang*="sql"] .token.variable {
+  color: #dcdcaa !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="sql"] .token.class-name {
+  color: #4ec9b0 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="sql"] .token.function {
+  color: #dcdcaa !important;
+  font-weight: normal !important;
+}
+
+pre[data-lang*="sql"] .token.datatype,
+pre[data-lang*="sql"] .token.builtin {
+  color: #4fc1ff !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="sql"] .token.constant {
+  color: #4fc1ff !important;
+  font-weight: normal !important;
+}
+
+pre[data-lang*="sql"] .token.property {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="javascript"] .token.keyword,
+pre[data-lang*="typescript"] .token.keyword,
+pre[data-lang*="js"] .token.keyword,
+pre[data-lang*="ts"] .token.keyword {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="javascript"] .token.function,
+pre[data-lang*="typescript"] .token.function,
+pre[data-lang*="js"] .token.function,
+pre[data-lang*="ts"] .token.function {
+  color: #dcdcaa !important;
+}
+
+pre[data-lang*="javascript"] .token.string,
+pre[data-lang*="typescript"] .token.string,
+pre[data-lang*="js"] .token.string,
+pre[data-lang*="ts"] .token.string {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="javascript"] .token.comment,
+pre[data-lang*="typescript"] .token.comment,
+pre[data-lang*="js"] .token.comment,
+pre[data-lang*="ts"] .token.comment {
+  color: #6a9955 !important;
+  font-style: italic !important;
+}
+
+pre[data-lang*="javascript"] .token.class-name,
+pre[data-lang*="typescript"] .token.class-name,
+pre[data-lang*="js"] .token.class-name,
+pre[data-lang*="ts"] .token.class-name {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="typescript"] .token.builtin,
+pre[data-lang*="ts"] .token.builtin {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator,
+pre[data-lang*="ts"] .token.operator {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="typescript"] .token.type-annotation,
+pre[data-lang*="typescript"] .token.return-type,
+pre[data-lang*="ts"] .token.type-annotation,
+pre[data-lang*="ts"] .token.return-type {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="typescript"] .token.parameter,
+pre[data-lang*="ts"] .token.parameter {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="typescript"] .token.property,
+pre[data-lang*="typescript"] .token.method,
+pre[data-lang*="ts"] .token.property,
+pre[data-lang*="ts"] .token.method {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="typescript"] .token.generic,
+pre[data-lang*="ts"] .token.generic {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="javascript"] .token.operator,
+pre[data-lang*="js"] .token.operator {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.comparison,
+pre[data-lang*="ts"] .token.operator.comparison,
+pre[data-lang*="javascript"] .token.operator.comparison,
+pre[data-lang*="js"] .token.operator.comparison {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.logical,
+pre[data-lang*="ts"] .token.operator.logical,
+pre[data-lang*="javascript"] .token.operator.logical,
+pre[data-lang*="js"] .token.operator.logical {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.assignment,
+pre[data-lang*="ts"] .token.operator.assignment,
+pre[data-lang*="javascript"] .token.operator.assignment,
+pre[data-lang*="js"] .token.operator.assignment {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="typescript"] .token.maybe-class-name,
+pre[data-lang*="ts"] .token.maybe-class-name {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="typescript"] .token.constant,
+pre[data-lang*="ts"] .token.constant {
+  color: #4fc1ff !important;
+}
+
+pre[data-lang*="typescript"] .token.variable,
+pre[data-lang*="ts"] .token.variable {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="typescript"] .token.interface-name,
+pre[data-lang*="typescript"] .token.type-definition,
+pre[data-lang*="ts"] .token.interface-name,
+pre[data-lang*="ts"] .token.type-definition {
+  color: #4ec9b0 !important;
+}
+
+pre code .token.punctuation {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.comparison-op,
+pre[data-lang*="ts"] .token.operator.comparison-op,
+pre[data-lang*="javascript"] .token.operator.comparison-op,
+pre[data-lang*="js"] .token.operator.comparison-op {
+  color: #569cd6 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.logical-op,
+pre[data-lang*="ts"] .token.operator.logical-op,
+pre[data-lang*="javascript"] .token.operator.logical-op,
+pre[data-lang*="js"] .token.operator.logical-op {
+  color: #569cd6 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.arrow-op,
+pre[data-lang*="ts"] .token.operator.arrow-op,
+pre[data-lang*="javascript"] .token.operator.arrow-op,
+pre[data-lang*="js"] .token.operator.arrow-op {
+  color: #569cd6 !important;
+  font-weight: bold !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.assignment-op,
+pre[data-lang*="ts"] .token.operator.assignment-op,
+pre[data-lang*="javascript"] .token.operator.assignment-op,
+pre[data-lang*="js"] .token.operator.assignment-op {
+  color: #d4d4d4 !important;
+}
+
+pre[data-lang*="typescript"] .token.operator.type-op,
+pre[data-lang*="ts"] .token.operator.type-op,
+pre[data-lang*="javascript"] .token.operator.type-op,
+pre[data-lang*="js"] .token.operator.type-op {
+  color: #c586c0 !important;
+  font-weight: normal !important;
+}
+
+pre[data-lang*="typescript"] .token.type-name,
+pre[data-lang*="ts"] .token.type-name,
+pre[data-lang*="typescript"] .custom-type,
+pre[data-lang*="ts"] .custom-type {
+  color: #4ec9b0 !important;
+  font-weight: normal !important;
+}
+
+pre[data-lang*="typescript"] .token.operator,
+pre[data-lang*="ts"] .token.operator,
+pre[data-lang*="javascript"] .token.operator,
+pre[data-lang*="js"] .token.operator {
+  font-weight: normal !important;
+}
+
+.probable-type {
+  color: #4ec9b0 !important;
+}
+
+pre[data-lang*="json"] .token.property {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="json"] .token.string {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="json"] .token.number {
+  color: #b5cea8 !important;
+}
+
+pre[data-lang*="json"] .token.boolean {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="json"] .token.null {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="css"] .token.selector {
+  color: #d7ba7d !important;
+}
+
+pre[data-lang*="css"] .token.property {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="css"] .token.string,
+pre[data-lang*="css"] .token.url {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="css"] .token.important {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="html"] .token.tag {
+  color: #569cd6 !important;
+}
+
+pre[data-lang*="html"] .token.attr-name {
+  color: #9cdcfe !important;
+}
+
+pre[data-lang*="html"] .token.attr-value {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="html"] .token.punctuation {
+  color: #808080 !important;
+}
+
+pre[data-lang*="bash"] .token.function,
+pre[data-lang*="shell"] .token.function {
+  color: #dcdcaa !important;
+}
+
+pre[data-lang*="bash"] .token.string,
+pre[data-lang*="shell"] .token.string {
+  color: #ce9178 !important;
+}
+
+pre[data-lang*="bash"] .token.comment,
+pre[data-lang*="shell"] .token.comment {
+  color: #6a9955 !important;
+}
+
+.token.inserted {
+  color: #b5cea8 !important;
+}
+
+.token.deleted {
+  color: #ce9178 !important;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold !important;
+}
+
+.token.italic {
+  font-style: italic !important;
+}
+
+.token.entity {
+  cursor: help !important;
+}

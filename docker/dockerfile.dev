@@ -1,0 +1,52 @@
+# Etapa 1: Construcción
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+ENV HUSKY_ENV_VAR=true
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+# Copia el esquema de Prisma
+COPY prisma ./prisma
+
+# Genera el cliente de Prisma
+RUN npx prisma generate
+
+COPY . .
+COPY .env.dev .env.dev
+COPY .env.dev .env
+
+ENV NODE_ENV=development
+RUN npm run build:dev
+RUN npm run build:server:dev
+
+# Etapa 2: Ejecución dev
+
+# Etapa 2: Ejecución dev
+FROM node:24-alpine AS runner
+
+WORKDIR /app
+
+# prisma/seed.ts usa la utilidad psql para historial de seeds en producción.
+RUN apk add --no-cache postgresql-client
+
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/jwtRS256.key ./jwtRS256.key
+COPY --from=builder /app/jwtRS256.key.pub ./jwtRS256.key.pub
+COPY --from=builder /app/docs ./docs
+
+COPY .env.dev .env.dev
+COPY .env.dev .env
+
+COPY cmd/start-docker-dev.sh ./start.sh
+RUN chmod +x ./start.sh
+
+EXPOSE 3000
+
+CMD ["/bin/sh", "/app/start.sh"]

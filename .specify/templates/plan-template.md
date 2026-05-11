@@ -1,7 +1,6 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link] **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
@@ -17,21 +16,29 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
+**Language/Version**: TypeScript strict mode on Node >=22.15.0  
+**Primary Dependencies**: React 19, React Router 7, Prisma 7, Zod, shadcn/Radix UI as applicable  
+**Storage**: Prisma-backed relational database with schema and migrations in `prisma/`  
+**Testing**: `npm run typecheck`, `npm run lint:strict`, `npm run format:check`, plus story-specific route/integration coverage when required  
+**Target Platform**: React Router server-rendered web application **Project Type**: Full-stack React Router web app  
 **Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
 **Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
 **Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+Document pass/fail evidence for each SomaUp constitutional gate:
+
+- **MVP Value**: Plan identifies the independently demonstrable user journey and excludes nonessential platform scope.
+- **React Router Workflow**: Plan maps route modules responsible for data loading, mutations, redirects, blocked access states, and dynamic `await import()`
+  calls to server-only core controllers.
+- **Core Module Pattern**: Plan maps each affected `app/core/{module}/` directory, `{module}.server.ts` barrel, internal `_*.service.ts` files, DB classes,
+  interfaces, and `CONFIG_*` namespaces.
+- **Prisma Data Boundary**: Plan lists Prisma schema/migration changes and the static `app/core/{module}/db/{entity}.db.ts` classes that isolate persistence.
+- **Access and Audit**: Plan defines role checks, approval-state enforcement, and audit records for admin or protected actions.
+- **Verification**: Plan lists automated tests, type/lint checks, and quickstart validation required for the affected user stories.
 
 ## Project Structure
 
@@ -48,6 +55,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -56,49 +64,40 @@ specs/[###-feature]/
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+app/
+├── routes/              # React Router route modules and page-level workflows
+├── components/          # Presentation-focused reusable UI
+├── modules/             # Feature UI composition modules when needed
+├── hooks/               # Reusable React hooks
+├── lib/
+│   ├── interfaces/      # Domain input contracts re-exported from index.ts
+│   ├── types/           # CONFIG_* namespaces re-exported from index.ts
+│   ├── functions/       # Internal _*.function.ts utilities
+│   └── helpers/         # Internal _*.helper.ts utilities
+└── core/
+  └── {module}/
+    ├── {module}.server.ts              # Only public server entry point
+    ├── db/{entity}.db.ts               # Static Prisma data-access class
+    ├── services/_{action}-{entity}.service.ts
+    └── providers/                      # Only if multiple strategies exist
+
+prisma/
+├── schema.prisma
+└── migrations/
 
 tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+├── route/               # Route behavior, access state, loaders/actions
+├── integration/         # User/admin journeys across routes and persistence
+└── unit/                # Pure domain or utility behavior
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: [Document the selected structure and reference the real directories captured above]
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                             | Why Needed                     | Simpler Alternative Rejected Because                            |
+| ------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| [e.g., 4th project]                   | [current need]                 | [why 3 projects insufficient]                                   |
+| [e.g., provider/factory/orchestrator] | [specific multi-strategy need] | [why standard controller -> service -> DB flow is insufficient] |
