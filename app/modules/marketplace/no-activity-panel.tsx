@@ -16,7 +16,12 @@ interface NoActivityPanelProps {
 
 export function NoActivityPanel({ apps, days = 30 }: NoActivityPanelProps): JSX.Element {
   if (apps.length === 0) {
-    return null as unknown as JSX.Element
+    return (
+      <div className="rounded-xl border border-green-200 bg-green-50 p-5">
+        <h3 className="font-semibold text-green-800">Sin apps inactivas</h3>
+        <p className="text-xs text-green-700 mt-1">Todas las apps activas registraron actividad en los últimos {days} días.</p>
+      </div>
+    )
   }
 
   return (
@@ -33,10 +38,8 @@ export function NoActivityPanel({ apps, days = 30 }: NoActivityPanelProps): JSX.
         {apps.map((app) => (
           <div key={app.id} className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-4 py-2.5">
             <div>
-              <span className="text-sm font-medium text-[var(--color-mp-charcoal)]">{app.name}</span>
-              <span className="ml-2 text-xs text-muted-foreground">
-                ({app.status === 'ACTIVE' ? 'Activa' : app.status === 'DRAFT' ? 'Borrador' : 'Inactiva'})
-              </span>
+              <span className="text-sm font-medium text-slate-900">{app.name}</span>
+              <span className="ml-2 text-xs text-slate-500">({app.status === 'ACTIVE' ? 'Activa' : app.status === 'DRAFT' ? 'Borrador' : 'Inactiva'})</span>
             </div>
             <Link
               to={`/dashboard/marketplace/apps/${app.id}/edit`}

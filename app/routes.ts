@@ -40,6 +40,7 @@ export default [
     route('marketplace/users', './routes/dashboard/marketplace/users.tsx'),
     route('marketplace/apps', './routes/dashboard/marketplace/apps.tsx'),
     route('marketplace/apps/new', './routes/dashboard/marketplace/apps/new.tsx'),
-    route('marketplace/apps/:appId/edit', './routes/dashboard/marketplace/apps/$appId.edit.tsx')
+    route('marketplace/apps/:appId/edit', './routes/dashboard/marketplace/apps/$appId.edit.tsx'),
+    route('marketplace/admins', './routes/dashboard/marketplace/admins.tsx')
   ])
 ] satisfies RouteConfig

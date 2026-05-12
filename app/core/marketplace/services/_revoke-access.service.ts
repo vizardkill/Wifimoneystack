@@ -63,13 +63,23 @@ export class CLS_RevokeMarketplaceAccess {
 
   private async _applyRevocation(): Promise<void> {
     try {
-      await AccessRequestDB.updateDecision({
+      const result = await AccessRequestDB.updateDecisionIfCurrent({
         id: this._payload.request_id,
         status: 'REVOKED',
         decided_by_user_id: this._payload.actor_user_id,
         decision_reason: this._payload.reason,
-        revoked_at: new Date()
+        revoked_at: new Date(),
+        expected_status: this._existing!.status,
+        expected_updated_at: this._payload.expected_updated_at
       })
+
+      if (!result.updated) {
+        this._statusRequest = CONFIG_REVOKE_MARKETPLACE_ACCESS.RequestStatus.Conflict
+        this._requestResponse = {
+          error: true,
+          message: 'La solicitud cambió mientras revocabas el acceso. Recarga la lista e inténtalo de nuevo.'
+        }
+      }
     } catch (err) {
       this._statusRequest = CONFIG_REVOKE_MARKETPLACE_ACCESS.RequestStatus.Error
       this._requestResponse = { error: true, message: 'Error revocando el acceso.' }

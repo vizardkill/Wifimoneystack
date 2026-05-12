@@ -20,7 +20,7 @@ export function DashboardCharts({ topApps, days }: DashboardChartsProps): JSX.El
     return (
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center space-y-2">
         <BarChart3 className="h-8 w-8 text-gray-300 mx-auto" />
-        <p className="text-sm text-muted-foreground">Sin datos de actividad en los últimos {days} días.</p>
+        <p className="text-sm text-slate-500">Sin datos de actividad en los últimos {days} días.</p>
       </div>
     )
   }
@@ -29,7 +29,7 @@ export function DashboardCharts({ topApps, days }: DashboardChartsProps): JSX.El
 
   return (
     <div className="space-y-4">
-      <h2 className="font-semibold text-[var(--color-mp-charcoal)] flex items-center gap-2">
+      <h2 className="flex items-center gap-2 font-semibold text-slate-900">
         <TrendingUp className="h-4 w-4" />
         Actividad por aplicación (últimos {days} días)
       </h2>
@@ -43,13 +43,13 @@ export function DashboardCharts({ topApps, days }: DashboardChartsProps): JSX.El
           return (
             <div key={app.app_id} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-[var(--color-mp-charcoal)] truncate max-w-[200px]">{app.app_name}</span>
-                <span className="text-muted-foreground text-xs">{total} eventos</span>
+                <span className="max-w-50 truncate font-medium text-slate-900">{app.app_name}</span>
+                <span className="text-xs text-slate-500">{total} eventos</span>
               </div>
               <div className="h-2 w-full rounded-full bg-gray-100">
-                <div className="h-2 rounded-full bg-[var(--color-mp-neon)]" style={{ width: `${widthPct}%` }} />
+                <div className="h-2 rounded-full bg-emerald-400" style={{ width: `${widthPct}%` }} />
               </div>
-              <div className="flex gap-4 text-xs text-muted-foreground">
+              <div className="flex gap-4 text-xs text-slate-500">
                 <span>{app.detail_views} vistas</span>
                 <span>{app.web_opens} aperturas</span>
                 <span>{app.downloads} descargas</span>
@@ -73,10 +73,10 @@ export function DashboardCharts({ topApps, days }: DashboardChartsProps): JSX.El
           <tbody>
             {topApps.map((app) => (
               <tr key={app.app_id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{app.app_name}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{app.detail_views}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{app.web_opens}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{app.downloads}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">{app.app_name}</td>
+                <td className="px-4 py-3 text-right text-slate-600">{app.detail_views}</td>
+                <td className="px-4 py-3 text-right text-slate-600">{app.web_opens}</td>
+                <td className="px-4 py-3 text-right text-slate-600">{app.downloads}</td>
               </tr>
             ))}
           </tbody>

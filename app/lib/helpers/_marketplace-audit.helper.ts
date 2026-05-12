@@ -48,3 +48,15 @@ export function buildAppAuditMeta(params: {
     timestamp: new Date().toISOString()
   }
 }
+
+/**
+ * Construir metadata de auditoría para promoción administrativa.
+ */
+export function buildAdminPromotionAuditMeta(params: { target_email: string; previous_role: 'USER'; promoted_role: 'ADMIN' }): Record<string, unknown> {
+  return {
+    target_email: params.target_email,
+    previous_role: params.previous_role,
+    promoted_role: params.promoted_role,
+    timestamp: new Date().toISOString()
+  }
+}

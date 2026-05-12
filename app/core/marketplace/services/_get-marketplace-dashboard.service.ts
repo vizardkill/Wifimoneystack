@@ -1,6 +1,8 @@
+import { UserDB } from '@/core/auth/db/user.db'
+import { AccessRequestDB } from '@/core/marketplace/db/access-request.db'
 import { AppUsageEventDB } from '@/core/marketplace/db/app-usage-event.db'
 import { MarketplaceAppDB } from '@/core/marketplace/db/marketplace-app.db'
-import { db } from '@/db.server'
+import { MarketplaceAuditEventDB } from '@/core/marketplace/db/marketplace-audit-event.db'
 
 import { trackError } from '@lib/functions/_track_error.function'
 
@@ -47,33 +49,56 @@ export class CLS_GetMarketplaceDashboard {
     draft_apps: 0,
     inactive_apps: 0
   }
+  private _kpisVariation7d: NonNullable<CONFIG_GET_MARKETPLACE_DASHBOARD.RequestResponse['data']>['kpis_variation_7d'] = {
+    new_users_7d: 0,
+    access_decisions_7d: 0,
+    apps_activated_7d: 0,
+    apps_deactivated_7d: 0
+  }
   private _topApps: NonNullable<CONFIG_GET_MARKETPLACE_DASHBOARD.RequestResponse['data']>['top_apps'] = []
   private _noActivityApps: NonNullable<CONFIG_GET_MARKETPLACE_DASHBOARD.RequestResponse['data']>['no_activity_apps'] = []
 
   private async _fetchData(): Promise<void> {
     const days = this._payload.days ?? 30
+    const since7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
     try {
-      const [pending, approved, rejected, revoked, appCounts, topApps, noActivityApps] = await Promise.all([
-        db.marketplaceAccessRequest.count({ where: { status: 'PENDING' } }),
-        db.marketplaceAccessRequest.count({ where: { status: 'APPROVED' } }),
-        db.marketplaceAccessRequest.count({ where: { status: 'REJECTED' } }),
-        db.marketplaceAccessRequest.count({ where: { status: 'REVOKED' } }),
+      const [accessCounts, appCounts, topApps, noActivityApps, newUsers7d, accessDecisions7d, appsActivated7d, appsDeactivated7d] = await Promise.all([
+        AccessRequestDB.countByStatus(),
         MarketplaceAppDB.countByStatus(),
         AppUsageEventDB.getTopAppsSummary({ days, limit: 10 }),
-        MarketplaceAppDB.listWithNoRecentActivity(days)
+        MarketplaceAppDB.listWithNoRecentActivity(days),
+        UserDB.countCreatedSince(since7Days),
+        AccessRequestDB.countDecisionsSince(since7Days),
+        MarketplaceAuditEventDB.countByActionsSince({
+          actions: ['APP_PUBLISHED'],
+          since: since7Days
+        }),
+        MarketplaceAuditEventDB.countByActionsSince({
+          actions: ['APP_UNPUBLISHED'],
+          since: since7Days
+        })
       ])
 
       this._kpis = {
-        total_requests: pending + approved + rejected + revoked,
-        pending_requests: pending,
-        approved_users: approved,
-        rejected_requests: rejected,
-        revoked_users: revoked,
+        total_requests: accessCounts.PENDING + accessCounts.APPROVED + accessCounts.REJECTED + accessCounts.REVOKED,
+        pending_requests: accessCounts.PENDING,
+        approved_users: accessCounts.APPROVED,
+        rejected_requests: accessCounts.REJECTED,
+        revoked_users: accessCounts.REVOKED,
         total_apps: appCounts.DRAFT + appCounts.ACTIVE + appCounts.INACTIVE,
         active_apps: appCounts.ACTIVE,
         draft_apps: appCounts.DRAFT,
         inactive_apps: appCounts.INACTIVE
       }
+
+      this._kpisVariation7d = {
+        new_users_7d: newUsers7d,
+        access_decisions_7d: accessDecisions7d,
+        apps_activated_7d: appsActivated7d,
+        apps_deactivated_7d: appsDeactivated7d
+      }
+
       this._topApps = topApps.map((a) => ({
         app_id: a.app_id,
         app_name: a.app_name,
@@ -101,6 +126,7 @@ export class CLS_GetMarketplaceDashboard {
     this._requestResponse = {
       data: {
         kpis: this._kpis,
+        kpis_variation_7d: this._kpisVariation7d,
         top_apps: this._topApps,
         no_activity_apps: this._noActivityApps
       }

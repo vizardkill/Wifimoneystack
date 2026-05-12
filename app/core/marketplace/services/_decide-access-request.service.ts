@@ -65,12 +65,22 @@ export class CLS_DecideMarketplaceAccessRequest {
 
   private async _applyDecision(): Promise<void> {
     try {
-      await AccessRequestDB.updateDecision({
+      const result = await AccessRequestDB.updateDecisionIfCurrent({
         id: this._payload.request_id,
         status: this._payload.decision,
         decided_by_user_id: this._payload.actor_user_id,
-        decision_reason: this._payload.reason
+        decision_reason: this._payload.reason,
+        expected_status: this._existing!.status,
+        expected_updated_at: this._payload.expected_updated_at
       })
+
+      if (!result.updated) {
+        this._statusRequest = CONFIG_DECIDE_MARKETPLACE_ACCESS_REQUEST.RequestStatus.Conflict
+        this._requestResponse = {
+          error: true,
+          message: 'La solicitud cambió mientras tomabas la decisión. Recarga la lista e inténtalo de nuevo.'
+        }
+      }
     } catch (err) {
       this._statusRequest = CONFIG_DECIDE_MARKETPLACE_ACCESS_REQUEST.RequestStatus.Error
       this._requestResponse = { error: true, message: 'Error actualizando la solicitud.' }
