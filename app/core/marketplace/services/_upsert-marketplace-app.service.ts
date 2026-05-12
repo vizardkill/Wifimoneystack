@@ -21,7 +21,7 @@ export class CLS_UpsertMarketplaceApp {
   }
 
   public async main(): Promise<RequestResponse> {
-    const steps = [this._upsertApp, this._writeAudit, this._buildSuccess]
+    const steps = [this._validatePayload, this._upsertApp, this._writeAudit, this._buildSuccess]
 
     for (const step of steps) {
       if (this._statusRequest === CONFIG_UPSERT_MARKETPLACE_APP.RequestStatus.Pending) {
@@ -35,6 +35,38 @@ export class CLS_UpsertMarketplaceApp {
     }
 
     return this._requestResponse
+  }
+
+  private async _validatePayload(): Promise<void> {
+    const name = this._payload.name.trim()
+    const summary = this._payload.summary.trim()
+
+    const fieldErrors: Record<string, string> = {}
+
+    if (!name) {
+      fieldErrors.name = 'El nombre es requerido.'
+    }
+
+    if (!summary) {
+      fieldErrors.summary = 'El resumen es requerido.'
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      this._statusRequest = CONFIG_UPSERT_MARKETPLACE_APP.RequestStatus.Validation
+      this._requestResponse = {
+        error: true,
+        message: 'Completa los campos obligatorios para guardar la app.',
+        field_errors: fieldErrors,
+        status: CONFIG_UPSERT_MARKETPLACE_APP.RequestStatus.Validation
+      }
+      return
+    }
+
+    this._payload = {
+      ...this._payload,
+      name,
+      summary
+    }
   }
 
   private async _upsertApp(): Promise<void> {

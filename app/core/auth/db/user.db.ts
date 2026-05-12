@@ -1,4 +1,4 @@
-import type { EmailVerificationToken, User } from '@prisma/client'
+import type { EmailVerificationToken, Role, User } from '@prisma/client'
 
 import { db } from '@/db.server'
 
@@ -132,6 +132,133 @@ export class UserDB {
     return db.user.findUnique({
       where: { id },
       select: { first_name: true, last_name: true }
+    })
+  }
+
+  /**
+   * Lista cuentas con rol administrativo (ADMIN/SUPERADMIN)
+   */
+  static async listAdminAccounts(params: { search?: string; page?: number; per_page?: number }): Promise<{
+    admins: Array<{
+      id: string
+      email: string
+      first_name: string
+      last_name: string
+      role: 'ADMIN' | 'SUPERADMIN'
+      created_at: Date
+    }>
+    total: number
+  }> {
+    const page = params.page ?? 1
+    const per_page = params.per_page ?? 20
+    const skip = (page - 1) * per_page
+    const adminRoles: Role[] = ['ADMIN', 'SUPERADMIN']
+
+    const where = {
+      role: { in: adminRoles },
+      ...(params.search
+        ? {
+            OR: [
+              { email: { contains: params.search, mode: 'insensitive' as const } },
+              { first_name: { contains: params.search, mode: 'insensitive' as const } },
+              { last_name: { contains: params.search, mode: 'insensitive' as const } }
+            ]
+          }
+        : {})
+    }
+
+    const [admins, total] = await Promise.all([
+      db.user.findMany({
+        where,
+        skip,
+        take: per_page,
+        orderBy: { created_at: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          first_name: true,
+          last_name: true,
+          role: true,
+          created_at: true
+        }
+      }),
+      db.user.count({ where })
+    ])
+
+    return {
+      admins: admins.map((admin) => ({
+        id: admin.id,
+        email: admin.email,
+        first_name: admin.first_name,
+        last_name: admin.last_name,
+        role: admin.role as 'ADMIN' | 'SUPERADMIN',
+        created_at: admin.created_at
+      })),
+      total
+    }
+  }
+
+  /**
+   * Promueve una cuenta existente por email al rol ADMIN.
+   */
+  static async promoteToAdminByEmail(target_email: string): Promise<
+    | {
+        status: 'not_found'
+      }
+    | {
+        status: 'already_admin'
+        user: Pick<User, 'id' | 'role' | 'email' | 'first_name' | 'last_name'>
+      }
+    | {
+        status: 'promoted'
+        user: Pick<User, 'id' | 'role' | 'email' | 'first_name' | 'last_name'>
+      }
+  > {
+    const user = await db.user.findUnique({
+      where: { email: target_email },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: true
+      }
+    })
+
+    if (!user) {
+      return { status: 'not_found' }
+    }
+
+    if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+      return { status: 'already_admin', user }
+    }
+
+    const updated = await db.user.update({
+      where: { id: user.id },
+      data: {
+        role: 'ADMIN',
+        updated_at: new Date()
+      },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: true
+      }
+    })
+
+    return { status: 'promoted', user: updated }
+  }
+
+  /**
+   * Cuenta usuarios creados desde una fecha dada.
+   */
+  static async countCreatedSince(since: Date): Promise<number> {
+    return db.user.count({
+      where: {
+        created_at: { gte: since }
+      }
     })
   }
 }

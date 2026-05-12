@@ -49,4 +49,16 @@ export class MarketplaceAuditEventDB {
       orderBy: { created_at: 'desc' }
     })
   }
+
+  /**
+   * Contar eventos por acciones desde una fecha dada.
+   */
+  static async countByActionsSince(params: { actions: MarketplaceAuditAction[]; since: Date }): Promise<number> {
+    return db.marketplaceAuditEvent.count({
+      where: {
+        action: { in: params.actions },
+        created_at: { gte: params.since }
+      }
+    })
+  }
 }

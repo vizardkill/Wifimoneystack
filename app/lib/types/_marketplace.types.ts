@@ -221,6 +221,7 @@ export namespace CONFIG_LIST_MARKETPLACE_ACCESS_REQUESTS {
         business_url: string | null
         created_at: Date
         decided_at: Date | null
+        updated_at: Date
       }>
       total: number
       page: number
@@ -236,6 +237,7 @@ export namespace CONFIG_DECIDE_MARKETPLACE_ACCESS_REQUEST {
     Pending = 'pending',
     Error = 'error',
     NotFound = 'not_found',
+    Conflict = 'conflict',
     InvalidTransition = 'invalid_transition',
     Completed = 'completed'
   }
@@ -244,6 +246,7 @@ export namespace CONFIG_DECIDE_MARKETPLACE_ACCESS_REQUEST {
     request_id: string
     decision: 'APPROVED' | 'REJECTED'
     reason?: string
+    expected_updated_at?: Date
     actor_user_id: string
   }
 
@@ -265,6 +268,7 @@ export namespace CONFIG_REVOKE_MARKETPLACE_ACCESS {
     Pending = 'pending',
     Error = 'error',
     NotFound = 'not_found',
+    Conflict = 'conflict',
     InvalidTransition = 'invalid_transition',
     Completed = 'completed'
   }
@@ -272,6 +276,7 @@ export namespace CONFIG_REVOKE_MARKETPLACE_ACCESS {
   export type Payload = {
     request_id: string
     reason?: string
+    expected_updated_at?: Date
     actor_user_id: string
   }
 
@@ -375,6 +380,12 @@ export namespace CONFIG_GET_MARKETPLACE_DASHBOARD {
         draft_apps: number
         inactive_apps: number
       }
+      kpis_variation_7d: {
+        new_users_7d: number
+        access_decisions_7d: number
+        apps_activated_7d: number
+        apps_deactivated_7d: number
+      }
       top_apps: Array<{
         app_id: string
         app_name: string
@@ -390,6 +401,68 @@ export namespace CONFIG_GET_MARKETPLACE_DASHBOARD {
         status: string
         published_at: Date | null
       }>
+    }
+  }
+}
+
+// ── US4: Administradores (superadmin) ───────────────────────────────────────
+
+export namespace CONFIG_LIST_ADMIN_ACCOUNTS {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Forbidden = 'forbidden',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    actor_user_id: string
+    search?: string
+    page?: number
+    per_page?: number
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      admins: Array<{
+        id: string
+        email: string
+        name: string | null
+        role: 'ADMIN' | 'SUPERADMIN'
+        created_at: Date
+      }>
+      total: number
+      page: number
+      per_page: number
+    }
+  }
+}
+
+export namespace CONFIG_PROMOTE_USER_TO_ADMIN {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    AlreadyAdmin = 'already_admin',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    actor_user_id: string
+    target_email: string
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      target_user_id: string
+      new_role: 'ADMIN'
     }
   }
 }

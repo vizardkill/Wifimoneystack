@@ -87,6 +87,37 @@ export class AccessRequestDB {
   }
 
   /**
+   * Contar solicitudes por estado para KPIs del dashboard.
+   */
+  static async countByStatus(): Promise<{ PENDING: number; APPROVED: number; REJECTED: number; REVOKED: number }> {
+    const [pending, approved, rejected, revoked] = await Promise.all([
+      db.marketplaceAccessRequest.count({ where: { status: 'PENDING' } }),
+      db.marketplaceAccessRequest.count({ where: { status: 'APPROVED' } }),
+      db.marketplaceAccessRequest.count({ where: { status: 'REJECTED' } }),
+      db.marketplaceAccessRequest.count({ where: { status: 'REVOKED' } })
+    ])
+
+    return {
+      PENDING: pending,
+      APPROVED: approved,
+      REJECTED: rejected,
+      REVOKED: revoked
+    }
+  }
+
+  /**
+   * Contar decisiones administrativas (approve/reject/revoke) en ventana temporal.
+   */
+  static async countDecisionsSince(since: Date): Promise<number> {
+    return db.marketplaceAccessRequest.count({
+      where: {
+        OR: [{ status: 'APPROVED' }, { status: 'REJECTED' }, { status: 'REVOKED' }],
+        decided_at: { gte: since }
+      }
+    })
+  }
+
+  /**
    * Actualizar estado de una solicitud (decisión admin)
    */
   static async updateDecision(params: {
@@ -106,5 +137,43 @@ export class AccessRequestDB {
         revoked_at: params.revoked_at
       }
     })
+  }
+
+  /**
+   * Actualizar decisión con guardas de concurrencia (first-write-wins).
+   * Si la fila ya cambió (status/updated_at), no actualiza y retorna updated=false.
+   */
+  static async updateDecisionIfCurrent(params: {
+    id: string
+    status: MarketplaceAccessStatus
+    decided_by_user_id: string
+    decision_reason?: string
+    revoked_at?: Date
+    expected_status?: MarketplaceAccessStatus
+    expected_updated_at?: Date
+  }): Promise<{ updated: boolean; record: MarketplaceAccessRequest | null }> {
+    const where = {
+      id: params.id,
+      ...(params.expected_status ? { status: params.expected_status } : {}),
+      ...(params.expected_updated_at ? { updated_at: params.expected_updated_at } : {})
+    }
+
+    const result = await db.marketplaceAccessRequest.updateMany({
+      where,
+      data: {
+        status: params.status,
+        decided_by_user_id: params.decided_by_user_id,
+        decision_reason: params.decision_reason,
+        decided_at: new Date(),
+        revoked_at: params.revoked_at
+      }
+    })
+
+    if (result.count === 0) {
+      return { updated: false, record: null }
+    }
+
+    const record = await this.findById(params.id)
+    return { updated: true, record }
   }
 }

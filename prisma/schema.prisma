@@ -17,6 +17,7 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  SUPERADMIN
 
   @@map("role")
 }
@@ -41,6 +42,7 @@ model User {
   auth_providers        UserAuthProvider[]
 
   @@index([email])
+  @@index([role, created_at])
   @@map("users")
 }
 
@@ -142,6 +144,7 @@ enum MarketplaceAuditAction {
   ACCESS_APPROVED
   ACCESS_REJECTED
   ACCESS_REVOKED
+  ADMIN_PROMOTED
   APP_CREATED
   APP_UPDATED
   APP_PUBLISHED
@@ -269,6 +272,7 @@ model MarketplaceAuditEvent {
   @@index([actor_user_id, created_at])
   @@index([target_user_id, created_at])
   @@index([app_id, created_at])
+  @@index([action, created_at])
   @@map("marketplace_audit_events")
 }
 

@@ -21,7 +21,9 @@ export default tseslint.config(
       'instrument.server.mjs',
       'app/core/config/templates/**/*.js',
       'build/**',
+      'dist/**',
       'node_modules/**',
+      'coverage/**',
       'postcss.config.js',
       'scripts/**/*.js',
       'cmd/**/*.js',
@@ -33,6 +35,7 @@ export default tseslint.config(
       'public/**',
       '.github/**',
       'tmp/**',
+      '*.min.js',
       '*.yml',
       '.shopify/**',
       '.react-router/**',
@@ -389,6 +392,16 @@ export default tseslint.config(
     files: ['app/routes/checkout.tsx'],
     rules: {
       'react-hooks/rules-of-hooks': 'warn'
+    }
+  },
+
+  // Tests - node:test usa registros de casos y stubs async sin await explícito
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off'
     }
   }
 )

@@ -4,6 +4,7 @@ import { CLS_GoogleProvider } from '@/core/auth/providers/google/google.provider
 import { CLS_ForgotPassword } from '@/core/auth/services/_forgot-password.service'
 import { CLS_LinkGoogleAccount } from '@/core/auth/services/_link-google-account.service'
 import { CLS_LoginUser } from '@/core/auth/services/_login.service'
+import { CLS_ListAdminAccounts, CLS_PromoteUserToAdmin } from '@/core/auth/services/_promote-admin-user.service'
 import { CLS_ResendVerificationEmail } from '@/core/auth/services/_resend-verification.service'
 import { CLS_ResetPassword } from '@/core/auth/services/_reset-password.service'
 import { CLS_RegisterUser } from '@/core/auth/services/_signup.service'
@@ -14,7 +15,9 @@ import { type AuthLoginPayload, AuthProviderType, type AuthRegisterPayload, type
 import {
   type CONFIG_FORGOT_PASSWORD,
   type CONFIG_LINK_GOOGLE_ACCOUNT,
+  type CONFIG_LIST_ADMIN_ACCOUNTS,
   type CONFIG_LOGIN_USER,
+  type CONFIG_PROMOTE_USER_TO_ADMIN,
   type CONFIG_REGISTER_USER,
   type CONFIG_RESET_PASSWORD,
   type CONFIG_VERIFY_EMAIL
@@ -85,6 +88,16 @@ export const forgotPasswordController = async (email: string): Promise<CONFIG_FO
 export const resetPasswordController = async (payload: CONFIG_RESET_PASSWORD.Payload): Promise<CONFIG_RESET_PASSWORD.RequestResponse> => {
   const result = new CLS_ResetPassword(payload)
   return result.execute()
+}
+
+export const listAdminAccountsController = async (payload: CONFIG_LIST_ADMIN_ACCOUNTS.Payload): Promise<CONFIG_LIST_ADMIN_ACCOUNTS.RequestResponse> => {
+  const result = new CLS_ListAdminAccounts(payload)
+  return result.main()
+}
+
+export const promoteUserToAdminController = async (payload: CONFIG_PROMOTE_USER_TO_ADMIN.Payload): Promise<CONFIG_PROMOTE_USER_TO_ADMIN.RequestResponse> => {
+  const result = new CLS_PromoteUserToAdmin(payload)
+  return result.main()
 }
 
 /**

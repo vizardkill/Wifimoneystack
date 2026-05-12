@@ -24,6 +24,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw redirect('/login')
   }
 
+  if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+    throw redirect('/dashboard/marketplace')
+  }
+
   const result = await new CLS_GetMarketplaceAccessStatus({ user_id: user.id }).main()
 
   // If approved, send to marketplace

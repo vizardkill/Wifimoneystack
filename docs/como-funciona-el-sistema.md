@@ -33,6 +33,22 @@ El sistema es un monolito web (React Router + Node + Prisma + PostgreSQL) con do
 4. Revisa metricas de uso agregadas (`marketplace_usage_events`).
 5. Cada accion sensible se registra en auditoria (`marketplace_audit_events`).
 
+### Roles administrativos
+
+- `ADMIN`: puede operar modulos Dashboard, Usuarios y Apps.
+- `SUPERADMIN`: hereda permisos de `ADMIN` y ademas puede operar el modulo Administradores.
+
+### Modulo Administradores
+
+El modulo `/dashboard/marketplace/admins` esta restringido a `SUPERADMIN` y permite:
+
+1. Listar cuentas con rol `ADMIN` y `SUPERADMIN`.
+2. Promover por email una cuenta existente de `USER` a `ADMIN`.
+3. Bloquear promociones duplicadas (si ya tiene rol admin).
+4. Registrar auditoria con accion `ADMIN_PROMOTED`.
+
+Si un usuario sin rol `SUPERADMIN` intenta acceder, es redirigido al dashboard del marketplace.
+
 ## Capas tecnicas
 
 - **Rutas**: loaders/actions de React Router (control de acceso y respuestas HTTP).
@@ -49,6 +65,9 @@ El sistema es un monolito web (React Router + Node + Prisma + PostgreSQL) con do
 - `APPROVED` -> `REVOKED`
 - `REJECTED` -> `APPROVED` (si admin decide reactivar)
 - `REVOKED` -> `APPROVED` (si admin decide reactivar)
+
+Adicionalmente, las decisiones administrativas usan regla first-write-wins: si dos admins deciden al mismo tiempo, la primera escritura valida gana y la segunda
+recibe conflicto para refrescar datos.
 
 ### Marketplace App
 

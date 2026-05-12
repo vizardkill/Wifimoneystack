@@ -19,14 +19,17 @@ export class MarketplaceAppDB {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
+    const description = input.description.trim() || input.summary
+    const instructions = input.instructions.trim() || 'Sin instrucciones adicionales.'
+
     if (input.id) {
       return db.marketplaceApp.update({
         where: { id: input.id },
         data: {
           name: input.name,
           summary: input.summary,
-          description: input.description,
-          instructions: input.instructions,
+          description,
+          instructions,
           access_mode: input.access_mode,
           web_url: input.web_url,
           updated_by_user_id: input.actor_user_id
@@ -39,8 +42,8 @@ export class MarketplaceAppDB {
         slug,
         name: input.name,
         summary: input.summary,
-        description: input.description,
-        instructions: input.instructions,
+        description,
+        instructions,
         access_mode: input.access_mode,
         web_url: input.web_url,
         created_by_user_id: input.actor_user_id
@@ -182,13 +185,7 @@ export class MarketplaceAppDB {
    * Validar si una app cumple requisitos para publicación
    */
   static async validatePublicationRequirements(id: string): Promise<{ valid: boolean; reasons: string[] }> {
-    const app = await db.marketplaceApp.findUnique({
-      where: { id },
-      include: {
-        media: true,
-        artifacts: { where: { is_active: true }, take: 1 }
-      }
-    })
+    const app = await db.marketplaceApp.findUnique({ where: { id } })
 
     if (!app) {
       return { valid: false, reasons: ['App no encontrada'] }
@@ -200,29 +197,6 @@ export class MarketplaceAppDB {
     }
     if (!app.summary) {
       reasons.push('Falta el resumen')
-    }
-    if (!app.description) {
-      reasons.push('Falta la descripción')
-    }
-    if (!app.instructions) {
-      reasons.push('Faltan las instrucciones')
-    }
-
-    const icon = app.media.find((m) => m.type === 'ICON')
-    if (!icon) {
-      reasons.push('Falta el ícono')
-    }
-
-    const screenshot = app.media.find((m) => m.type === 'SCREENSHOT')
-    if (!screenshot) {
-      reasons.push('Falta al menos un screenshot')
-    }
-
-    if (app.access_mode === 'WEB_LINK' && !app.web_url) {
-      reasons.push('Falta la URL de la app (modo WEB_LINK)')
-    }
-    if (app.access_mode === 'PACKAGE_DOWNLOAD' && app.artifacts.length === 0) {
-      reasons.push('Falta un artefacto activo (modo PACKAGE_DOWNLOAD)')
     }
 
     return { valid: reasons.length === 0, reasons }

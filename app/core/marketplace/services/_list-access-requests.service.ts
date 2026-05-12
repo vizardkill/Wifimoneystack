@@ -65,7 +65,8 @@ export class CLS_ListMarketplaceAccessRequests {
           company_name: r.company_name,
           business_url: r.business_url,
           created_at: r.created_at,
-          decided_at: r.decided_at
+          decided_at: r.decided_at,
+          updated_at: r.updated_at
         })),
         total: this._result.total,
         page: this._payload.page ?? 1,

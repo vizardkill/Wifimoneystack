@@ -113,6 +113,25 @@ Usuario                          Plataforma                        Admin
 | Eventos de uso por semana         | > 50 en primer mes |
 | Tiempo de carga del marketplace   | < 1 segundo p95    |
 
+## Dashboard Operativo (Admin Console)
+
+El panel administrativo del marketplace expone dos bloques de métricas:
+
+### 1) KPIs actuales (foto del estado)
+
+- Solicitudes: `pending_requests`, `approved_users`, `rejected_requests`, `revoked_users`.
+- Catálogo: `active_apps`, `draft_apps`, `inactive_apps`.
+- Totales de control: `total_requests`, `total_apps`.
+
+### 2) Variación de 7 días (dinámica reciente)
+
+- `new_users_7d`: cantidad de usuarios nuevos creados en 7 días.
+- `access_decisions_7d`: decisiones administrativas de acceso (approve/reject/revoke) en 7 días.
+- `apps_activated_7d`: publicaciones de apps en 7 días (`APP_PUBLISHED`).
+- `apps_deactivated_7d`: despublicaciones de apps en 7 días (`APP_UNPUBLISHED`).
+
+Estas métricas permiten diferenciar entre estado acumulado y movimiento reciente para tomar decisiones operativas sin perder contexto.
+
 ---
 
 ## Operación en Desarrollo Local
