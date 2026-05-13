@@ -2,7 +2,10 @@
 FROM node:24-alpine AS builder
 
 WORKDIR /app
+ARG BUILD_DB_URL="postgresql://build:build@localhost:5432/build?schema=public"
 ENV HUSKY_ENV_VAR=true
+ENV BUILD=production
+ENV DB_URL=${BUILD_DB_URL}
 
 COPY package.json package-lock.json ./
 
@@ -12,21 +15,22 @@ RUN npm ci
 COPY prisma ./prisma
 
 COPY . .
-COPY .env.prod .env.prod
-COPY .env.prod .env
+
+ENV NODE_ENV=production
 
 # Genera el cliente de Prisma
 RUN npx prisma generate
 
-ENV NODE_ENV=production
-RUN npm run build:prod
-RUN npm run build:server:prod
+RUN npx react-router build
+RUN node scripts/build-server.js prod
 
 
 # Etapa 2: Ejecución
 FROM node:24-alpine AS runner
 
 WORKDIR /app
+ENV NODE_ENV=production
+ENV BUILD=production
 
 # prisma/seed.ts usa la utilidad psql para historial de seeds en producción.
 RUN apk add --no-cache postgresql-client
@@ -39,13 +43,10 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/jwtRS256.key ./jwtRS256.key
 COPY --from=builder /app/jwtRS256.key.pub ./jwtRS256.key.pub
 COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/cmd ./cmd
 
-COPY .env.prod .env.prod
-COPY .env.prod .env
-
-COPY cmd/start-docker-prod.sh ./start.sh
-RUN chmod +x ./start.sh
+RUN chmod +x ./cmd/start-docker-prod.sh ./cmd/bootstrap-db-prod.sh
 
 EXPOSE 8080
 
-CMD ["/bin/sh", "/app/start.sh"]
+CMD ["/bin/sh", "/app/cmd/start-docker-prod.sh"]

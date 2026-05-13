@@ -60,8 +60,8 @@ declare namespace NodeJS {
     GOOGLE_CALENDAR_REDIRECT_URI: string
     GCS_PROJECT_ID: string
     GCS_BUCKET_NAME: string
-    GCS_CLIENT_EMAIL: string
-    GCS_PRIVATE_KEY: string
+    GCS_CLIENT_EMAIL: string | undefined
+    GCS_PRIVATE_KEY: string | undefined
     EMAIL_PROVIDER: 'SMTP' | 'RESEND' | 'SES'
     EMAIL_ENABLE_FALLBACK: 'true' | 'false'
     EMAIL_FALLBACK_PROVIDER: 'SMTP' | 'RESEND' | 'SES'

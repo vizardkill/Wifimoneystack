@@ -346,6 +346,29 @@ export default tseslint.config(
   {
     files: ['app/routes/**/*.ts', 'app/routes/**/*.tsx'],
     rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/db.server'],
+              message: 'Las routes no deben importar db.server. Usa controladores desde app/core/*/*.server.ts.'
+            },
+            {
+              group: ['@/core/*/db/**'],
+              message: 'Las routes no deben acceder a la capa DB directamente.'
+            },
+            {
+              group: ['@/core/*/services/_*.service'],
+              message: 'Las routes deben importar desde el barrel app/core/{module}/{module}.server.ts.'
+            },
+            {
+              group: ['@/core/*/providers/**'],
+              message: 'Las routes no deben depender de providers internos de core.'
+            }
+          ]
+        }
+      ],
       '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',

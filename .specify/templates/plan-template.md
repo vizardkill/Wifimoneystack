@@ -37,6 +37,8 @@ Document pass/fail evidence for each SomaUp constitutional gate:
 - **Core Module Pattern**: Plan maps each affected `app/core/{module}/` directory, `{module}.server.ts` barrel, internal `_*.service.ts` files, DB classes,
   interfaces, and `CONFIG_*` namespaces.
 - **Prisma Data Boundary**: Plan lists Prisma schema/migration changes and the static `app/core/{module}/db/{entity}.db.ts` classes that isolate persistence.
+- **Frontend Composition and Forms**: Plan documents route slimming strategy, module decomposition (`components/forms/hooks/lib/types`), and client/server form
+  validation contracts (react-hook-form + zodResolver + Zod actions) for nontrivial flows.
 - **Access and Audit**: Plan defines role checks, approval-state enforcement, and audit records for admin or protected actions.
 - **Verification**: Plan lists automated tests, type/lint checks, and quickstart validation required for the affected user stories.
 
@@ -67,7 +69,13 @@ specs/[###-feature]/
 app/
 ├── routes/              # React Router route modules and page-level workflows
 ├── components/          # Presentation-focused reusable UI
-├── modules/             # Feature UI composition modules when needed
+├── modules/             # Feature UI composition modules
+│   └── {feature}/
+│       ├── components/  # Presentational pieces
+│       ├── forms/       # Nontrivial forms and field groups
+│       ├── hooks/       # Feature-specific hooks
+│       ├── lib/         # Feature helpers/selectors/view models
+│       └── types/       # Feature UI/domain types
 ├── hooks/               # Reusable React hooks
 ├── lib/
 │   ├── interfaces/      # Domain input contracts re-exported from index.ts

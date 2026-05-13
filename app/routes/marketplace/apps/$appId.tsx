@@ -28,7 +28,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw redirect('/marketplace')
   }
 
-  return data({ app: result.data! })
+  const app = result.data!
+  const presentation_mode: 'LEGACY' | 'STOREFRONT' = app.presentation_mode === 'STOREFRONT' && app.storefront ? 'STOREFRONT' : 'LEGACY'
+
+  return data({
+    app: {
+      ...app,
+      presentation_mode,
+      storefront: presentation_mode === 'STOREFRONT' ? app.storefront : null
+    }
+  })
 }
 
 export default function AppDetailPage(): JSX.Element {

@@ -11,6 +11,25 @@ interface AppMedia {
   sort_order: number
 }
 
+interface StorefrontLanguage {
+  code: string
+  label: string
+  sort_order: number
+}
+
+interface StorefrontData {
+  summary: string
+  description: string
+  instructions: string
+  developer_name: string
+  developer_website: string
+  support_email: string | null
+  support_url: string | null
+  languages: StorefrontLanguage[]
+  media: AppMedia[]
+  video_url: string | null
+}
+
 interface MarketplaceAppDetail {
   id: string
   slug: string
@@ -20,7 +39,9 @@ interface MarketplaceAppDetail {
   instructions?: string | null
   access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
   web_url?: string | null
+  presentation_mode?: 'LEGACY' | 'STOREFRONT'
   media: AppMedia[]
+  storefront?: StorefrontData | null
   has_active_artifact: boolean
 }
 
@@ -80,29 +101,23 @@ function toListItems(text: string | null | undefined): string[] {
 }
 
 export function AppDetail({ app }: AppDetailProps): JSX.Element {
+  const storefront = app.presentation_mode === 'STOREFRONT' ? (app.storefront ?? null) : null
+
   const iconUrl = app.media.find((media) => media.type === 'ICON' && typeof media.public_url === 'string' && media.public_url.length > 0)?.public_url ?? null
-
-  const screenshots = app.media
-    .filter((media) => media.type === 'SCREENSHOT' && typeof media.public_url === 'string' && media.public_url.length > 0)
-    .map((media) => ({
-      id: media.id,
-      type: 'SCREENSHOT' as const,
-      url: media.public_url!,
-      alt: media.alt_text ?? `Captura de ${app.name}`
-    }))
-
-  const videos = app.media
-    .filter((media) => media.type === 'VIDEO' && typeof media.public_url === 'string' && media.public_url.length > 0)
-    .map((media) => ({
-      id: media.id,
-      type: 'VIDEO' as const,
-      url: media.public_url!,
-      alt: media.alt_text ?? `Video de ${app.name}`
-    }))
-
   const galleryItems: GalleryMedia[] = useMemo(() => {
-    return [...videos, ...screenshots]
-  }, [screenshots, videos])
+    return app.media
+      .filter((media) => (media.type === 'SCREENSHOT' || media.type === 'VIDEO') && typeof media.public_url === 'string' && media.public_url.length > 0)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((media) => ({
+        id: media.id,
+        type: media.type as 'SCREENSHOT' | 'VIDEO',
+        url: media.public_url!,
+        alt: media.alt_text ?? (media.type === 'VIDEO' ? `Video de ${app.name}` : `Captura de ${app.name}`)
+      }))
+  }, [app.media, app.name])
+
+  const supportedLanguages = storefront?.languages.map((language) => language.label).filter((label) => label.length > 0) ?? []
+  const supportedLanguagesText = supportedLanguages.length > 0 ? supportedLanguages.join(' / ') : 'Español / Inglés'
 
   const [activeMediaId, setActiveMediaId] = useState<string>(galleryItems[0]?.id ?? '')
 
@@ -180,7 +195,17 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Desarrollador</p>
-              <p className="text-[15px] font-medium text-[var(--color-mp-charcoal)]">Marketplace Ecommerce Team</p>
+              <p className="text-[15px] font-medium text-[var(--color-mp-charcoal)]">{storefront?.developer_name ?? 'Marketplace Ecommerce Team'}</p>
+              {storefront?.developer_website ? (
+                <a
+                  href={storefront.developer_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--color-mp-green)] underline underline-offset-2"
+                >
+                  {storefront.developer_website}
+                </a>
+              ) : null}
             </div>
           </div>
 
@@ -339,12 +364,30 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
             <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Idiomas</dt>
-                <dd className="mt-1 text-[15px] text-[var(--color-mp-charcoal)]">Español / Inglés</dd>
+                <dd className="mt-1 text-[15px] text-[var(--color-mp-charcoal)]">{supportedLanguagesText}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Compatibilidad</dt>
                 <dd className="mt-1 text-[15px] text-[var(--color-mp-charcoal)]">Tiendas ecommerce y operaciones D2C</dd>
               </div>
+              {storefront && (storefront.support_email || storefront.support_url) ? (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Soporte</dt>
+                  <dd className="mt-1 space-y-1 text-[15px] text-[var(--color-mp-charcoal)]">
+                    {storefront.support_email ? <p>{storefront.support_email}</p> : null}
+                    {storefront.support_url ? (
+                      <a
+                        href={storefront.support_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-[var(--color-mp-green)] underline underline-offset-2"
+                      >
+                        {storefront.support_url}
+                      </a>
+                    ) : null}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           </section>
         </section>

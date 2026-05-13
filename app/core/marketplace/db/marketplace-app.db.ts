@@ -1,8 +1,26 @@
-import type { MarketplaceApp, MarketplaceAppStatus } from '@prisma/client'
+import type { MarketplaceApp, MarketplaceAppStatus, Prisma } from '@prisma/client'
 
 import { db } from '@/db.server'
 
 import type { IMarketplaceAppWithMedia, IUpsertMarketplaceAppInput } from '@lib/interfaces'
+
+type MarketplaceAppForPublicDetailQuery = Prisma.MarketplaceAppGetPayload<{
+  include: {
+    media: true
+    artifacts: true
+    storefront_versions: {
+      include: {
+        languages: { include: { language: true } }
+        media: { include: { media: true } }
+      }
+    }
+  }
+}>
+
+type MarketplaceAppForPublicDetail = Omit<MarketplaceAppForPublicDetailQuery, 'artifacts' | 'storefront_versions'> & {
+  active_artifact: MarketplaceAppForPublicDetailQuery['artifacts'][number] | null
+  published_storefront: MarketplaceAppForPublicDetailQuery['storefront_versions'][number] | null
+}
 
 /**
  * Data Access Object para MarketplaceApp
@@ -67,6 +85,41 @@ export class MarketplaceAppDB {
     }
     const { artifacts, ...rest } = app
     return { ...rest, active_artifact: artifacts[0] ?? null }
+  }
+
+  static async findByIdForPublicDetail(id: string): Promise<MarketplaceAppForPublicDetail | null> {
+    const app = await db.marketplaceApp.findUnique({
+      where: { id },
+      include: {
+        media: { orderBy: { sort_order: 'asc' } },
+        artifacts: { where: { is_active: true }, take: 1 },
+        storefront_versions: {
+          where: { kind: 'PUBLISHED' },
+          include: {
+            languages: {
+              include: { language: true },
+              orderBy: { sort_order: 'asc' }
+            },
+            media: {
+              include: { media: true },
+              orderBy: { sort_order: 'asc' }
+            }
+          },
+          take: 1
+        }
+      }
+    })
+
+    if (!app) {
+      return null
+    }
+
+    const { artifacts, storefront_versions, ...rest } = app
+    return {
+      ...rest,
+      active_artifact: artifacts[0] ?? null,
+      published_storefront: storefront_versions[0] ?? null
+    }
   }
 
   /**
@@ -185,7 +238,16 @@ export class MarketplaceAppDB {
    * Validar si una app cumple requisitos para publicación
    */
   static async validatePublicationRequirements(id: string): Promise<{ valid: boolean; reasons: string[] }> {
-    const app = await db.marketplaceApp.findUnique({ where: { id } })
+    const app = await db.marketplaceApp.findUnique({
+      where: { id },
+      include: {
+        media: true,
+        artifacts: {
+          where: { is_active: true },
+          take: 1
+        }
+      }
+    })
 
     if (!app) {
       return { valid: false, reasons: ['App no encontrada'] }
@@ -198,7 +260,86 @@ export class MarketplaceAppDB {
     if (!app.summary) {
       reasons.push('Falta el resumen')
     }
+    if (!app.description) {
+      reasons.push('Falta la descripción')
+    }
+    if (!app.instructions) {
+      reasons.push('Faltan las instrucciones')
+    }
+
+    const iconCount = app.media.filter((media) => media.type === 'ICON').length
+    if (iconCount === 0) {
+      reasons.push('Falta el ícono')
+    }
+
+    if (app.access_mode === 'WEB_LINK' && !app.web_url) {
+      reasons.push('Falta la URL web para el modo WEB_LINK')
+    }
+
+    if (app.access_mode === 'PACKAGE_DOWNLOAD' && app.artifacts.length === 0) {
+      reasons.push('Falta un artefacto activo para el modo PACKAGE_DOWNLOAD')
+    }
 
     return { valid: reasons.length === 0, reasons }
+  }
+
+  static async evaluateDraftStorefrontReadiness(app_id: string): Promise<{ ready: boolean; missing_requirements: string[] }> {
+    const draft = await db.marketplaceAppStorefrontVersion.findUnique({
+      where: {
+        app_id_kind: {
+          app_id,
+          kind: 'DRAFT'
+        }
+      },
+      include: {
+        languages: true,
+        media: {
+          include: { media: true }
+        }
+      }
+    })
+
+    const missing: string[] = []
+    if (!draft) {
+      return {
+        ready: false,
+        missing_requirements: ['No existe borrador de storefront']
+      }
+    }
+
+    if (!draft.summary.trim()) {
+      missing.push('Resumen')
+    }
+    if (!draft.description.trim()) {
+      missing.push('Descripción')
+    }
+    if (!draft.instructions.trim()) {
+      missing.push('Instrucciones')
+    }
+    if (!draft.developer_name.trim()) {
+      missing.push('Nombre del desarrollador')
+    }
+    if (!draft.developer_website.trim()) {
+      missing.push('Sitio web del desarrollador')
+    }
+
+    if (draft.languages.length === 0) {
+      missing.push('Al menos un idioma')
+    }
+
+    const iconCount = draft.media.filter((item) => item.media.type === 'ICON').length
+    if (iconCount !== 1) {
+      missing.push('Un ícono seleccionado')
+    }
+
+    const screenshotCount = draft.media.filter((item) => item.media.type === 'SCREENSHOT').length
+    if (screenshotCount < 1) {
+      missing.push('Al menos una captura de pantalla')
+    }
+
+    return {
+      ready: missing.length === 0,
+      missing_requirements: missing
+    }
   }
 }

@@ -9,14 +9,18 @@ import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, 
 const normalizeMultilineEnvValue = (value: string | undefined): string => (value ?? '').replace(/\\n/g, '\n')
 
 const gcsPrivateKey: string | undefined = process.env.GCS_PRIVATE_KEY
+const gcsClientEmail: string | undefined = process.env.GCS_CLIENT_EMAIL
 
 const GCS_CONFIG = {
   projectId: process.env.GCS_PROJECT_ID,
   bucketName: process.env.GCS_BUCKET_NAME,
-  credentials: {
-    client_email: process.env.GCS_CLIENT_EMAIL,
-    private_key: normalizeMultilineEnvValue(gcsPrivateKey)
-  }
+  credentials:
+    typeof gcsClientEmail === 'string' && gcsClientEmail.length > 0 && typeof gcsPrivateKey === 'string' && gcsPrivateKey.length > 0
+      ? {
+          client_email: gcsClientEmail,
+          private_key: normalizeMultilineEnvValue(gcsPrivateKey)
+        }
+      : undefined
 }
 
 const SIGNED_URL_EXPIRATION_SECONDS = 15 * 60 // 15 minutos
@@ -26,15 +30,23 @@ const MEDIA_PROXY_TOKEN_VERSION = 'v1'
 const MEDIA_PROXY_CIPHER_ALGORITHM = 'aes-256-gcm'
 const MEDIA_PROXY_IV_LENGTH_BYTES = 12
 
-type MediaProxyTokenScope = 'private' | 'public_pdf'
+type MediaProxyTokenScope = 'private' | 'public_pdf' | 'public_prefixed'
 
 type MediaProxyTokenPayload = {
   containerName: string
   objectPath: string
   exp?: number
   scope: MediaProxyTokenScope
+  allowedPrefix?: string
   userId?: string
 }
+
+export const STORAGE_PUBLIC_MEDIA_PREFIXES = {
+  EXERCISES_VIDEOS: 'exercises/videos/',
+  MARKETPLACE_STOREFRONTS: 'marketplace/storefronts/'
+} as const
+
+export type StoragePublicMediaPrefix = (typeof STORAGE_PUBLIC_MEDIA_PREFIXES)[keyof typeof STORAGE_PUBLIC_MEDIA_PREFIXES]
 
 const fromBase64Url = (value: string): string => Buffer.from(value, 'base64url').toString('utf8')
 
@@ -59,6 +71,21 @@ const normalizeMediaObjectPath = (objectPath: string): string => {
   return normalized
 }
 
+const normalizeMediaAllowedPrefix = (allowedPrefix: string): string => {
+  const normalized = allowedPrefix.replace(/^\/+/, '').trim()
+  if (normalized.length === 0 || normalized.includes('..')) {
+    throw new Error('allowedPrefix inválido para media proxy token')
+  }
+
+  return normalized.endsWith('/') ? normalized : `${normalized}/`
+}
+
+export const isObjectPathAllowedForPrefix = (objectPath: string, allowedPrefix: string): boolean => {
+  const normalizedObjectPath = normalizeMediaObjectPath(objectPath)
+  const normalizedAllowedPrefix = normalizeMediaAllowedPrefix(allowedPrefix)
+  return normalizedObjectPath.startsWith(normalizedAllowedPrefix)
+}
+
 const normalizeMediaProxyPayload = (
   parsed: Partial<MediaProxyTokenPayload> & {
     bucketName?: string
@@ -66,8 +93,9 @@ const normalizeMediaProxyPayload = (
 ): MediaProxyTokenPayload | null => {
   const containerName = typeof parsed.containerName === 'string' ? parsed.containerName : parsed.bucketName
   const objectPath = typeof parsed.objectPath === 'string' ? parsed.objectPath.replace(/^\/+/, '') : ''
-  const scope: MediaProxyTokenScope = parsed.scope === 'public_pdf' ? 'public_pdf' : 'private'
+  const scope: MediaProxyTokenScope = parsed.scope === 'public_pdf' ? 'public_pdf' : parsed.scope === 'public_prefixed' ? 'public_prefixed' : 'private'
   const userId = typeof parsed.userId === 'string' && parsed.userId.length > 0 ? parsed.userId : undefined
+  const allowedPrefix = typeof parsed.allowedPrefix === 'string' && parsed.allowedPrefix.length > 0 ? parsed.allowedPrefix : undefined
   const exp = typeof parsed.exp === 'number' ? parsed.exp : undefined
 
   if (!containerName || !objectPath || objectPath.includes('..')) {
@@ -84,10 +112,25 @@ const normalizeMediaProxyPayload = (
     }
   }
 
+  if (scope === 'public_prefixed') {
+    if (!allowedPrefix) {
+      return null
+    }
+
+    try {
+      if (!isObjectPathAllowedForPrefix(objectPath, allowedPrefix)) {
+        return null
+      }
+    } catch {
+      return null
+    }
+  }
+
   return {
     containerName,
     objectPath,
     scope,
+    ...(allowedPrefix ? { allowedPrefix } : {}),
     ...(typeof exp === 'number' ? { exp } : {}),
     ...(userId ? { userId } : {})
   }
@@ -189,6 +232,24 @@ export function createPublicMediaProxyToken(bucketName: string, objectPath: stri
   return encryptMediaProxyPayload(payload)
 }
 
+export function createPrefixedPublicMediaProxyToken(bucketName: string, objectPath: string, allowedPrefix: string): string {
+  const normalizedObjectPath = normalizeMediaObjectPath(objectPath)
+  const normalizedAllowedPrefix = normalizeMediaAllowedPrefix(allowedPrefix)
+
+  if (!normalizedObjectPath.startsWith(normalizedAllowedPrefix)) {
+    throw new Error('objectPath fuera del prefijo permitido para media proxy público')
+  }
+
+  const payload: MediaProxyTokenPayload = {
+    containerName: bucketName,
+    objectPath: normalizedObjectPath,
+    scope: 'public_prefixed',
+    allowedPrefix: normalizedAllowedPrefix
+  }
+
+  return encryptMediaProxyPayload(payload)
+}
+
 export function buildMediaProxyUrl(token: string, baseUrl?: string): string {
   const relativePath = `/api/v1/storage/media?token=${encodeURIComponent(token)}`
   if (!baseUrl) {
@@ -216,12 +277,21 @@ export function buildPublicMediaProxyUrlFromStorageUrl(sourceUrl: string | null,
     return null
   }
 
-  if (!parsed.objectPath.startsWith(allowedPrefix)) {
+  try {
+    if (!isObjectPathAllowedForPrefix(parsed.objectPath, allowedPrefix)) {
+      return null
+    }
+  } catch {
     return null
   }
 
-  const token = createPublicMediaProxyToken(parsed.containerName, parsed.objectPath)
-  return buildMediaProxyUrl(token, appBaseUrl)
+  try {
+    const normalizedAllowedPrefix = normalizeMediaAllowedPrefix(allowedPrefix)
+    const token = createPrefixedPublicMediaProxyToken(parsed.containerName, parsed.objectPath, normalizedAllowedPrefix)
+    return buildMediaProxyUrl(token, appBaseUrl)
+  } catch {
+    return null
+  }
 }
 
 export function verifyMediaProxyToken(token: string): MediaProxyTokenPayload | null {
@@ -235,8 +305,14 @@ export function verifyMediaProxyToken(token: string): MediaProxyTokenPayload | n
 }
 
 function getStorageClient(): Storage {
-  if (!GCS_CONFIG.projectId || !GCS_CONFIG.bucketName || !GCS_CONFIG.credentials.client_email || !GCS_CONFIG.credentials.private_key) {
+  if (!GCS_CONFIG.projectId || !GCS_CONFIG.bucketName) {
     throw new Error('Configuración de almacenamiento incompleta para proveedor GCS.')
+  }
+
+  if (!GCS_CONFIG.credentials) {
+    return new Storage({
+      projectId: GCS_CONFIG.projectId
+    })
   }
 
   return new Storage({
@@ -245,7 +321,7 @@ function getStorageClient(): Storage {
   })
 }
 
-export type StorageFolder = 'exercises/videos' | 'exercises/thumbnails' | 'avatars' | 'attachments' | 'branding' | 'receipts'
+export type StorageFolder = 'exercises/videos' | 'exercises/thumbnails' | 'avatars' | 'attachments' | 'branding' | 'receipts' | 'marketplace/storefronts'
 
 export interface SignedUploadUrlOptions {
   /** Nombre final del archivo en el bucket (sin carpeta) */

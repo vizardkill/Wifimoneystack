@@ -80,6 +80,24 @@ Usuario                          Plataforma                        Admin
 
 ---
 
+## Capa Editorial de Storefront (Feature 003)
+
+La vitrina comercial enriquecida opera con versionado editorial independiente del estado operativo de la app:
+
+- `DRAFT`: borrador editable por admins (puede estar incompleto).
+- `PUBLISHED`: snapshot estable visible al usuario aprobado.
+
+Reglas de negocio:
+
+- Editar el borrador **no** cambia inmediatamente lo que ve el usuario final.
+- Solo `publish_storefront` reemplaza la versión pública.
+- Si una app activa no tiene storefront publicado, el sistema mantiene la vista `LEGACY` previa.
+
+Esto permite iterar UX/UI tipo Shopify (resumen comercial, descripcion extendida, instrucciones, idiomas, media y video opcional) sin riesgo de exponer
+contenido a medio construir.
+
+---
+
 ## Propuesta de Valor
 
 | Para el usuario                             | Para el equipo interno                          |

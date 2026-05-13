@@ -61,4 +61,15 @@ export class MarketplaceAuditEventDB {
       }
     })
   }
+
+  static async countStorefrontActionsSince(since: Date): Promise<number> {
+    return db.marketplaceAuditEvent.count({
+      where: {
+        action: {
+          in: ['APP_STOREFRONT_DRAFT_SAVED', 'APP_STOREFRONT_PUBLISHED', 'APP_STOREFRONT_MEDIA_UPDATED']
+        },
+        created_at: { gte: since }
+      }
+    })
+  }
 }

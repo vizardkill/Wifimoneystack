@@ -21,6 +21,8 @@ data-model.md, contracts/
 ## Path Conventions
 
 - **SomaUp web app**: `app/routes/`, `app/components/`, `app/modules/`, `app/core/`, `app/lib/`, `prisma/`, `tests/`
+- **Feature module decomposition**: `app/modules/{feature}/components/`, `app/modules/{feature}/forms/`, `app/modules/{feature}/hooks/`,
+  `app/modules/{feature}/lib/`, `app/modules/{feature}/types/`
 - **Core module**: `app/core/{module}/{module}.server.ts`, `app/core/{module}/db/{entity}.db.ts`, `app/core/{module}/services/_{action}-{entity}.service.ts`
 - **Types/interfaces**: `app/lib/types/_{module}.types.ts`, `app/lib/types/index.ts`, `app/lib/interfaces/_{module}.interfaces.ts`,
   `app/lib/interfaces/index.ts`
@@ -69,9 +71,11 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T004 Setup Prisma schema changes and migrations in prisma/
 - [ ] T005 [P] Implement authentication, approval-state, and role enforcement boundaries
 - [ ] T006 [P] Setup React Router route modules, loaders/actions, and redirect patterns
+- [ ] T006a [P] Define route slimming and module extraction plan for UI-heavy routes
 - [ ] T007 Create base static DB classes in app/core/[module]/db/[entity].db.ts
 - [ ] T008 Create CONFIG\_\* namespaces and domain interfaces in app/lib/types and app/lib/interfaces
 - [ ] T009 Configure audit/activity logging for protected user and admin actions
+- [ ] T009a Configure form validation contracts (react-hook-form + zodResolver + server Zod schemas) for nontrivial forms
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

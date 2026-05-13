@@ -403,6 +403,208 @@
       }
     ]
   },
+  "marketplace_app_storefront_versions": {
+    "table": {
+      "tableName": "marketplace_app_storefront_versions",
+      "comment": "Versiones de storefront (draft/publicada) para una app"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "app_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "kind",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "readiness_status",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "summary",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "description",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "instructions",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "developer_name",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "developer_website",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "support_email",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "support_url",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "created_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "updated_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "published_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_versions",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_language_catalog": {
+    "table": {
+      "tableName": "marketplace_language_catalog",
+      "comment": "Catálogo controlado de idiomas para storefront"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "code",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "label",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "sort_order",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "is_active",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_language_catalog",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_app_storefront_version_languages": {
+    "table": {
+      "tableName": "marketplace_app_storefront_version_languages",
+      "comment": "Idiomas seleccionados para una versión de storefront"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "storefront_version_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "language_code",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "sort_order",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_languages",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
+  "marketplace_app_storefront_version_media": {
+    "table": {
+      "tableName": "marketplace_app_storefront_version_media",
+      "comment": "Media asociada a una versión de storefront (con orden)"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "storefront_version_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "media_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "sort_order",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_app_storefront_version_media",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
   "marketplace_app_artifacts": {
     "table": {
       "tableName": "marketplace_app_artifacts",

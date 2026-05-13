@@ -1,0 +1,101 @@
+timeout: 3600s
+
+substitutions:
+  _REGION: southamerica-east1
+  _AR_REPO: marketplace-ecommerce
+  _IMAGE_NAME: marketplace-ecommerce
+  _IMAGE_TAG: manual
+  _SERVICE_NAME: marketplace-ecommerce
+  _DB_JOB_NAME: marketplace-db-bootstrap
+  _RUNTIME_SERVICE_ACCOUNT: marketplace-runtime@wifimoneystack.iam.gserviceaccount.com
+  _SQL_CONNECTION_NAME: wifimoneystack:southamerica-east1:marketplace-db
+  _GCS_BUCKET_NAME: wifimoneystack-marketplace-assets-172797712331
+  _APP_URL: https://wifimoneystack.com
+  _HOST_NAME: wifimoneystack.com
+  _GOOGLE_CLIENT_ID: 76296996011-g81uvfplcd9t10sicfiqqi01dl08quhs.apps.googleusercontent.com
+  _GOOGLE_REDIRECT_URI: https://wifimoneystack.com/api/v1/auth/oauth/google/callback
+  _GOOGLE_CALENDAR_REDIRECT_URI: https://wifimoneystack.com/api/v1/google/calendar/callback
+  _EMAIL_PROVIDER: SMTP
+  _EMAIL_ENABLE_FALLBACK: 'true'
+  _EMAIL_FALLBACK_PROVIDER: RESEND
+  _EMAIL_MAX_RETRIES: '3'
+  _EMAIL_RETRY_DELAY: '1000'
+  _DEFAULT_FROM_EMAIL: support@somaup.com
+  _DEFAULT_FROM_NAME: Wifimoneystack
+  _SMTP_HOST: smtp-relay.gmail.com
+  _SMTP_PORT: '587'
+  _SMTP_CLIENT_HOSTNAME: wifimoneystack.com
+  _SMTP_SECURE: 'false'
+  _SMTP_REQUIRE_TLS: 'true'
+  _SMTP_CONNECTION_TIMEOUT_MS: '10000'
+  _AWS_REGION: sa-east-1
+  _VAPID_EMAIL: mailto:admin@somaup.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - docker/dockerfile.prod
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        IMAGE_URI="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}"
+
+        gcloud run jobs deploy "${_DB_JOB_NAME}" \
+          --image="$$IMAGE_URI" \
+          --region="${_REGION}" \
+          --service-account="${_RUNTIME_SERVICE_ACCOUNT}" \
+          --set-cloudsql-instances="${_SQL_CONNECTION_NAME}" \
+          --cpu=1 \
+          --memory=1Gi \
+          --max-retries=1 \
+          --task-timeout=1800s \
+          --set-env-vars="NODE_ENV=production,BUILD=production,DB_REQUIRE_SSL=false,DB_APPLICATION_NAME=${_SERVICE_NAME}-db-bootstrap" \
+          --set-secrets="DB_URL=marketplace-db-url:latest" \
+          --command=/bin/sh \
+          --args=./cmd/bootstrap-db-prod.sh \
+          --execute-now \
+          --wait
+
+        gcloud run deploy "${_SERVICE_NAME}" \
+          --image="$$IMAGE_URI" \
+          --region="${_REGION}" \
+          --no-invoker-iam-check \
+          --service-account="${_RUNTIME_SERVICE_ACCOUNT}" \
+          --set-cloudsql-instances="${_SQL_CONNECTION_NAME}" \
+          --execution-environment=gen2 \
+          --cpu=1 \
+          --memory=1Gi \
+          --concurrency=80 \
+          --min-instances=0 \
+          --max-instances=3 \
+          --timeout=300s \
+          --port=8080 \
+          --update-env-vars="NODE_ENV=production,BUILD=production,APP_URL=${_APP_URL},HOST_NAME=${_HOST_NAME},HOST_PROTOCOL=https,HOST_PORT=,DB_REQUIRE_SSL=false,DB_APPLICATION_NAME=${_SERVICE_NAME},STORAGE_PROVIDER=GCS,GCS_PROJECT_ID=$PROJECT_ID,GCS_BUCKET_NAME=${_GCS_BUCKET_NAME},GCP_LOGGING_ENABLED=true,GCP_LOG_NAME=${_SERVICE_NAME},GCP_ERROR_LOG_NAME=${_SERVICE_NAME}-errors,GCP_PROJECT_ID=$PROJECT_ID,GCLOUD_PROJECT=$PROJECT_ID,EMAIL_PROVIDER=${_EMAIL_PROVIDER},EMAIL_ENABLE_FALLBACK=${_EMAIL_ENABLE_FALLBACK},EMAIL_FALLBACK_PROVIDER=${_EMAIL_FALLBACK_PROVIDER},EMAIL_MAX_RETRIES=${_EMAIL_MAX_RETRIES},EMAIL_RETRY_DELAY=${_EMAIL_RETRY_DELAY},DEFAULT_FROM_EMAIL=${_DEFAULT_FROM_EMAIL},DEFAULT_FROM_NAME=${_DEFAULT_FROM_NAME},GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID},GOOGLE_REDIRECT_URI=${_GOOGLE_REDIRECT_URI},GOOGLE_CALENDAR_REDIRECT_URI=${_GOOGLE_CALENDAR_REDIRECT_URI},SMTP_HOST=${_SMTP_HOST},SMTP_PORT=${_SMTP_PORT},SMTP_CLIENT_HOSTNAME=${_SMTP_CLIENT_HOSTNAME},SMTP_SECURE=${_SMTP_SECURE},SMTP_REQUIRE_TLS=${_SMTP_REQUIRE_TLS},SMTP_CONNECTION_TIMEOUT_MS=${_SMTP_CONNECTION_TIMEOUT_MS},AWS_REGION=${_AWS_REGION},VAPID_EMAIL=${_VAPID_EMAIL},RUN_DB_BOOTSTRAP_ON_START=false,CLUSTER=false,CRON_ENABLED=false,JOBS=false,NGROK_ENABLED=false" \
+          --set-secrets="DB_URL=marketplace-db-url:latest,SESSION_SECRET=marketplace-session-secret:latest,MEDIA_PROXY_SECRET=marketplace-media-proxy-secret:latest,ENCRYPTION_KEY=marketplace-encryption-key:latest,GOOGLE_CLIENT_SECRET=marketplace-google-client-secret:latest,SMTP_USER=marketplace-smtp-user:latest,SMTP_PASS=marketplace-smtp-pass:latest,RESEND_API_KEY=marketplace-resend-api-key:latest,AWS_SES_ACCESS_KEY_ID=marketplace-aws-ses-access-key-id:latest,AWS_SES_SECRET_ACCESS_KEY=marketplace-aws-ses-secret-access-key:latest,VAPID_PUBLIC_KEY=marketplace-vapid-public-key:latest,VAPID_PRIVATE_KEY=marketplace-vapid-private-key:latest"
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest
