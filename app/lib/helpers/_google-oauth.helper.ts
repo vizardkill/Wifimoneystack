@@ -11,6 +11,22 @@ import { trackError } from '@lib/functions'
 let googleClient: OAuth2Client | null = null
 let googleCalendarClient: OAuth2Client | null = null
 
+const getGoogleLoginClientId = (): string | undefined => {
+  return process.env.GOOGLE_LOGIN_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID
+}
+
+const getGoogleLoginClientSecret = (): string | undefined => {
+  return process.env.GOOGLE_LOGIN_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET
+}
+
+const getGoogleLoginRedirectUri = (): string | undefined => {
+  return process.env.GOOGLE_LOGIN_REDIRECT_URI ?? process.env.GOOGLE_REDIRECT_URI
+}
+
+const getGoogleLoginScopes = (): string[] => {
+  return ['openid', 'email', 'profile']
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
@@ -54,7 +70,7 @@ const parseGoogleUserInfo = (value: unknown, accessToken: string): GoogleUserPro
  * Obtiene una instancia del cliente OAuth de Google (Singleton)
  */
 function getGoogleClient(): OAuth2Client {
-  googleClient ??= new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI)
+  googleClient ??= new OAuth2Client(getGoogleLoginClientId(), getGoogleLoginClientSecret(), getGoogleLoginRedirectUri())
   return googleClient
 }
 
@@ -77,7 +93,7 @@ export async function validateGoogleToken(accessToken: string): Promise<GoogleUs
     const client = getGoogleClient()
     const ticket = await client.verifyIdToken({
       idToken: accessToken,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: getGoogleLoginClientId()
     })
 
     const payload = ticket.getPayload()
@@ -123,7 +139,7 @@ export async function validateGoogleToken(accessToken: string): Promise<GoogleUs
  */
 export function generateGoogleAuthUrl(state: string): string {
   const client = getGoogleClient()
-  const scopes = ['openid', 'email', 'profile']
+  const scopes = getGoogleLoginScopes()
 
   return client.generateAuthUrl({
     access_type: 'offline',

@@ -12,7 +12,7 @@ substitutions:
   _GCS_BUCKET_NAME: wifimoneystack-marketplace-assets-172797712331
   _APP_URL: https://wifimoneystack.com
   _HOST_NAME: wifimoneystack.com
-  _GOOGLE_CLIENT_ID: 76296996011-g81uvfplcd9t10sicfiqqi01dl08quhs.apps.googleusercontent.com
+  _GOOGLE_CLIENT_ID: 172797712331-78kg8efvm0aeote8kbh98i03vlad0nma.apps.googleusercontent.com
   _GOOGLE_REDIRECT_URI: https://wifimoneystack.com/api/v1/auth/oauth/google/callback
   _GOOGLE_CALENDAR_REDIRECT_URI: https://wifimoneystack.com/api/v1/google/calendar/callback
   _EMAIL_PROVIDER: SMTP

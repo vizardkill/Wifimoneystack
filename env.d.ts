@@ -57,6 +57,9 @@ declare namespace NodeJS {
     GOOGLE_CLIENT_ID: string
     GOOGLE_CLIENT_SECRET: string
     GOOGLE_REDIRECT_URI: string
+    GOOGLE_LOGIN_CLIENT_ID: string | undefined
+    GOOGLE_LOGIN_CLIENT_SECRET: string | undefined
+    GOOGLE_LOGIN_REDIRECT_URI: string | undefined
     GOOGLE_CALENDAR_REDIRECT_URI: string
     GCS_PROJECT_ID: string
     GCS_BUCKET_NAME: string
