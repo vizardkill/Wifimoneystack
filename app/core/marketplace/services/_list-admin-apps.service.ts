@@ -5,6 +5,8 @@ import { trackError } from '@lib/functions/_track_error.function'
 
 import { CONFIG_LIST_ADMIN_MARKETPLACE_APPS } from '@types'
 
+import { resolveMarketplaceMediaUrl } from './_resolve-marketplace-media-url.helper'
+
 type RequestStatus = CONFIG_LIST_ADMIN_MARKETPLACE_APPS.RequestStatus
 type RequestResponse = CONFIG_LIST_ADMIN_MARKETPLACE_APPS.RequestResponse
 type Payload = CONFIG_LIST_ADMIN_MARKETPLACE_APPS.Payload
@@ -68,7 +70,7 @@ export class CLS_ListAdminMarketplaceApps {
           name: app.name,
           status: app.status,
           access_mode: app.access_mode,
-          icon_url: media[0]?.public_url ?? null
+          icon_url: resolveMarketplaceMediaUrl(media[0]?.public_url ?? null)
         }
       })
     )

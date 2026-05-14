@@ -19,6 +19,7 @@ interface MediaGalleryManagerProps {
 
 type PrepareUploadActionResponse = {
   error?: boolean
+  success?: boolean
   message?: string
   details?: {
     signed_url?: string
@@ -103,11 +104,26 @@ const buildLocalFallbackStorageKey = (appId: string, mediaType: 'ICON' | 'SCREEN
   return `local-dev/marketplace/storefronts/${appId}/${typeSegment}-${timestamp}-${cleanFileName}`
 }
 
-const parseJsonResponse = async <T,>(response: Response): Promise<T | null> => {
-  try {
-    return (await response.json()) as T
-  } catch {
+const getPrepareUploadFeedback = (value: unknown): PrepareUploadActionResponse | null => {
+  if (typeof value !== 'object' || value === null) {
     return null
+  }
+
+  const recordValue = value as Record<string, unknown>
+  const details = typeof recordValue.details === 'object' && recordValue.details !== null ? (recordValue.details as Record<string, unknown>) : null
+
+  return {
+    error: recordValue.error === true,
+    success: recordValue.success === true,
+    message: typeof recordValue.message === 'string' ? recordValue.message : undefined,
+    details:
+      details === null
+        ? undefined
+        : {
+            signed_url: typeof details.signed_url === 'string' ? details.signed_url : undefined,
+            public_url: typeof details.public_url === 'string' ? details.public_url : undefined,
+            storage_key: typeof details.storage_key === 'string' ? details.storage_key : undefined
+          }
   }
 }
 
@@ -142,15 +158,18 @@ const toUploadPhaseMessage = (phase: ImageUploadPhase): string => {
 }
 
 export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }: MediaGalleryManagerProps): JSX.Element {
+  const prepareUploadFetcher = useFetcher<PrepareUploadActionResponse>()
   const registerMediaFetcher = useFetcher<RegisterMediaActionResponse>()
   const imageFileInputRef = useRef<HTMLInputElement | null>(null)
   const videoUrlInputRef = useRef<HTMLInputElement | null>(null)
+  const prepareUploadResolverRef = useRef<((value: PrepareUploadActionResponse | null) => void) | null>(null)
 
   const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null)
   const [selectedImageName, setSelectedImageName] = useState<string>('')
   const [uploadPhase, setUploadPhase] = useState<ImageUploadPhase>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadHint, setUploadHint] = useState<string | null>(null)
+  const [pendingLocalFallbackHint, setPendingLocalFallbackHint] = useState(false)
   const [activeStep, setActiveStep] = useState<MediaWizardStep>('ICON')
 
   const icons = useMemo(() => draftMedia.filter((media) => media.type === 'ICON'), [draftMedia])
@@ -189,6 +208,36 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
       setUploadPhase('idle')
     }
   }, [registerMediaFetcher.state, uploadPhase])
+
+  useEffect(() => {
+    if (prepareUploadFetcher.state !== 'idle') {
+      return
+    }
+
+    if (prepareUploadResolverRef.current === null) {
+      return
+    }
+
+    const resolve = prepareUploadResolverRef.current
+    prepareUploadResolverRef.current = null
+    resolve(getPrepareUploadFeedback(prepareUploadFetcher.data))
+  }, [prepareUploadFetcher.data, prepareUploadFetcher.state])
+
+  useEffect(() => {
+    if (registerMediaFetcher.state !== 'idle') {
+      return
+    }
+
+    if (!pendingLocalFallbackHint) {
+      return
+    }
+
+    if (registerFeedback?.success) {
+      setUploadHint('Bucket no disponible: se registró la imagen en modo local temporal para continuar el flujo.')
+    }
+
+    setPendingLocalFallbackHint(false)
+  }, [pendingLocalFallbackHint, registerFeedback?.success, registerMediaFetcher.state])
 
   useEffect(() => {
     return () => {
@@ -249,6 +298,7 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
 
       setUploadError(null)
       setUploadHint(null)
+      setPendingLocalFallbackHint(false)
       setUploadPhase('preparing')
 
       let resolvedStorageKey = ''
@@ -264,21 +314,19 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
         prepareBody.set('content_type', fileEntry.type)
         prepareBody.set('size_bytes', String(fileEntry.size))
 
-        const prepareResponse = await fetch(window.location.pathname, {
-          method: 'POST',
-          body: prepareBody,
-          headers: {
-            Accept: 'application/json'
-          }
+        const preparePayload = await new Promise<PrepareUploadActionResponse | null>((resolve) => {
+          prepareUploadResolverRef.current = resolve
+          void prepareUploadFetcher.submit(prepareBody, {
+            method: 'post',
+            action: window.location.pathname
+          })
         })
-
-        const preparePayload = await parseJsonResponse<PrepareUploadActionResponse>(prepareResponse)
 
         const signedUrl = preparePayload?.details?.signed_url
         const publicUrl = preparePayload?.details?.public_url
         const storageKey = preparePayload?.details?.storage_key
 
-        if (!prepareResponse.ok || typeof signedUrl !== 'string' || typeof publicUrl !== 'string' || typeof storageKey !== 'string') {
+        if (preparePayload?.error || typeof signedUrl !== 'string' || typeof publicUrl !== 'string' || typeof storageKey !== 'string') {
           throw new Error(preparePayload?.message ?? 'No se pudo preparar la carga en storage.')
         }
 
@@ -323,9 +371,7 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
 
       setUploadPhase('registering')
 
-      if (usedLocalFallback) {
-        setUploadHint('Bucket no disponible: se registró la imagen en modo local temporal para continuar el flujo.')
-      }
+      setPendingLocalFallbackHint(usedLocalFallback)
 
       void registerMediaFetcher.submit(registerBody, { method: 'post' })
 
@@ -338,7 +384,7 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
         return null
       })
     },
-    [appId, registerMediaFetcher]
+    [appId, prepareUploadFetcher, registerMediaFetcher]
   )
 
   const handleImageUploadFormSubmit = useCallback(
@@ -349,8 +395,8 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
   )
 
   const focusFileInput = useCallback((): void => {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
+    void window.requestAnimationFrame(() => {
+      void window.requestAnimationFrame(() => {
         imageFileInputRef.current?.focus()
         imageFileInputRef.current?.click()
       })
@@ -358,8 +404,8 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
   }, [])
 
   const focusVideoInput = useCallback((): void => {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
+    void window.requestAnimationFrame(() => {
+      void window.requestAnimationFrame(() => {
         videoUrlInputRef.current?.focus()
       })
     })

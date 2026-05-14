@@ -1,11 +1,36 @@
 import { z } from 'zod'
 
 const OptionalHttpsUrlSchema = z.preprocess(
-  (v) => (v === '' ? undefined : v),
+  (v) => (v === '' || v == null ? undefined : v),
   z.string().url('La URL no es válida').startsWith('https://', 'La URL debe ser HTTPS').trim().optional()
 )
 
-const OptionalEmailSchema = z.preprocess((v) => (v === '' ? undefined : v), z.string().email('El correo de soporte no es válido').trim().optional())
+const DATA_IMAGE_URL_PATTERN = /^data:image\/(png|jpe?g|webp);base64,[a-z0-9+/=]+$/i
+
+const OptionalPublicMediaUrlSchema = z.preprocess(
+  (v) => (v === '' || v == null ? undefined : v),
+  z
+    .string()
+    .trim()
+    .refine((value) => {
+      if (DATA_IMAGE_URL_PATTERN.test(value)) {
+        return true
+      }
+
+      try {
+        new URL(value)
+        return true
+      } catch {
+        return false
+      }
+    }, 'La URL pública no es válida')
+    .optional()
+)
+
+const OptionalEmailSchema = z.preprocess(
+  (v) => (v === '' || v == null ? undefined : v),
+  z.string().email('El correo de soporte no es válido').trim().optional()
+)
 
 const FormBooleanSchema = z.preprocess((v) => {
   if (v === 'true') {
@@ -122,7 +147,7 @@ export const RegisterMarketplaceAppMediaSchema = z
     app_id: z.string().uuid('ID de app inválido'),
     media_type: z.enum(['ICON', 'SCREENSHOT', 'VIDEO']),
     storage_key: z.preprocess((v) => (v === '' ? undefined : v), z.string().max(500, 'La llave de storage es demasiado larga').trim().optional()),
-    public_url: z.preprocess((v) => (v === '' ? undefined : v), z.string().url('La URL pública no es válida').trim().optional()),
+    public_url: OptionalPublicMediaUrlSchema,
     external_video_url: OptionalHttpsUrlSchema,
     alt_text: z.preprocess((v) => (v === '' ? undefined : v), z.string().max(160, 'El texto alternativo no puede superar 160 caracteres').trim().optional()),
     attach_to_draft: FormBooleanSchema.optional().default(true)

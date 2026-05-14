@@ -17,13 +17,26 @@ import { LoginSchema } from '@lib/schemas/auth.schemas'
 import { type CONFIG_LOGIN_USER, type DataWithResponseInit } from '@types'
 
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response | null> {
-  const { getSession } = await import('@/core/auth/cookie.server')
+  const { destroySession, getSession } = await import('@/core/auth/cookie.server')
+  const { verifyUserToken } = await import('@/core/auth/verify_token.server')
   const session = await getSession(request.headers.get('Cookie'))
   const tokenValue: unknown = session.get('token')
   const token = typeof tokenValue === 'string' ? tokenValue : ''
+
   if (token.length > 0) {
-    return redirect('/')
+    const user = verifyUserToken(token)
+
+    if (user) {
+      return redirect('/')
+    }
+
+    return redirect('/login', {
+      headers: {
+        'Set-Cookie': await destroySession(session)
+      }
+    })
   }
+
   return null
 }
 

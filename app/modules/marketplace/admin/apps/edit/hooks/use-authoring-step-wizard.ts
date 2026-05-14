@@ -16,6 +16,8 @@ interface WizardInput {
   app: {
     name: string
     summary: string
+    access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
+    web_url: string | null
   }
   draft_storefront: {
     readiness_status: 'INCOMPLETE' | 'READY'
@@ -46,8 +48,9 @@ export function useAuthoringStepWizard(input: WizardInput): AuthoringStepWizard 
   const totalSteps = AUTHORING_STEPS.length
 
   const missingRequirements = useMemo(() => new Set(input.draft_storefront.missing_requirements), [input.draft_storefront.missing_requirements])
+  const missingWebUrl = input.app.access_mode === 'WEB_LINK' && (input.app.web_url ?? '').trim().length === 0
 
-  const baseStepReady = input.app.name.trim().length > 0 && input.app.summary.trim().length > 0
+  const baseStepReady = input.app.name.trim().length > 0 && input.app.summary.trim().length > 0 && !missingWebUrl
   const storefrontStepReady =
     !missingRequirements.has('Resumen') &&
     !missingRequirements.has('Descripción') &&
@@ -87,7 +90,11 @@ export function useAuthoringStepWizard(input: WizardInput): AuthoringStepWizard 
   const getStepStatusLabel = useCallback(
     (step: AuthoringStep): string => {
       if (step === 'BASE') {
-        return baseStepReady ? 'Listo' : 'Pendiente'
+        if (baseStepReady) {
+          return 'Listo'
+        }
+
+        return missingWebUrl ? 'Falta URL web' : 'Pendiente'
       }
 
       if (step === 'STOREFRONT') {
@@ -104,7 +111,7 @@ export function useAuthoringStepWizard(input: WizardInput): AuthoringStepWizard 
 
       return vitrinaStepReady ? 'Lista para revisar' : 'En preparación'
     },
-    [baseStepReady, storefrontStepReady, mediaStepReady, vitrinaStepReady]
+    [baseStepReady, mediaStepReady, missingWebUrl, storefrontStepReady, vitrinaStepReady]
   )
 
   const isStepCompleted = useCallback(

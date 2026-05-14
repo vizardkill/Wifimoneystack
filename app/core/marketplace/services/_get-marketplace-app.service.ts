@@ -6,6 +6,8 @@ import { trackError } from '@lib/functions/_track_error.function'
 
 import { CONFIG_GET_MARKETPLACE_APP } from '@types'
 
+import { resolveMarketplaceMediaUrl } from './_resolve-marketplace-media-url.helper'
+
 type RequestStatus = CONFIG_GET_MARKETPLACE_APP.RequestStatus
 type RequestResponse = CONFIG_GET_MARKETPLACE_APP.RequestResponse
 type Payload = CONFIG_GET_MARKETPLACE_APP.Payload
@@ -91,7 +93,7 @@ export class CLS_GetMarketplaceApp {
     const legacyMedia = app.media.map((media) => ({
       id: media.id,
       type: media.type,
-      public_url: media.public_url,
+      public_url: resolveMarketplaceMediaUrl(media.public_url),
       alt_text: media.alt_text,
       sort_order: media.sort_order
     }))
@@ -100,7 +102,7 @@ export class CLS_GetMarketplaceApp {
       ? publishedStorefront.media.map((relation) => ({
           id: relation.media.id,
           type: relation.media.type,
-          public_url: relation.media.public_url,
+          public_url: resolveMarketplaceMediaUrl(relation.media.public_url),
           alt_text: relation.media.alt_text,
           sort_order: relation.sort_order
         }))

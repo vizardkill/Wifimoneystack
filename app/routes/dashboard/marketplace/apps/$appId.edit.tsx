@@ -78,10 +78,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const nameRaw = formData.get('name')
     const slugRaw = formData.get('slug')
     const summaryRaw = formData.get('summary')
+    const webUrlRaw = formData.get('web_url')
 
     const name = typeof nameRaw === 'string' ? nameRaw.trim() : ''
     const slug = typeof slugRaw === 'string' ? slugRaw.trim() : ''
     const summary = typeof summaryRaw === 'string' ? summaryRaw.trim() : ''
+    const webUrl = typeof webUrlRaw === 'string' ? webUrlRaw.trim() : ''
 
     const authoringResult = await new CLS_GetMarketplaceAppAuthoring({
       app_id: params.appId,
@@ -102,6 +104,24 @@ export async function action({ request, params }: ActionFunctionArgs) {
       return data({ error: true, message: 'Nombre y resumen son requeridos.' }, { status: 400 })
     }
 
+    if (existingApp.access_mode === 'WEB_LINK' && !webUrl) {
+      return data({ error: true, message: 'La URL web es requerida para apps con modo WEB_LINK.' }, { status: 400 })
+    }
+
+    if (webUrl) {
+      let parsedWebUrl: URL
+
+      try {
+        parsedWebUrl = new URL(webUrl)
+      } catch {
+        return data({ error: true, message: 'La URL web no es válida.' }, { status: 400 })
+      }
+
+      if (parsedWebUrl.protocol !== 'https:') {
+        return data({ error: true, message: 'La URL web debe usar HTTPS.' }, { status: 400 })
+      }
+    }
+
     const result = await new CLS_UpsertMarketplaceApp({
       id: params.appId,
       actor_user_id: user.id,
@@ -111,7 +131,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       description: existingApp.description,
       instructions: existingApp.instructions,
       access_mode: existingApp.access_mode,
-      web_url: existingApp.web_url ?? undefined
+      web_url: webUrl || undefined
     }).main()
 
     if (result.error) {
@@ -293,7 +313,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
       return data({ error: true, message: result.message ?? 'No se pudo publicar storefront.' }, { status: 400 })
     }
 
-    return data({ success: true, message: 'Storefront publicado correctamente.', details: result.data })
+    return data({
+      success: true,
+      message: 'Storefront publicado correctamente. Esto actualiza la vitrina pública, no el estado operativo de la app.',
+      details: result.data
+    })
   }
 
   return data({ error: true, message: 'Intent no soportado para esta ruta.' }, { status: 400 })

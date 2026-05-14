@@ -22,12 +22,24 @@ import { type CONFIG_REGISTER_USER, type DataWithResponseInit } from '@types'
 type GoogleRegisterResponse = CONFIG_REGISTER_USER.RequestResponse
 
 export async function loader({ request }: LoaderFunctionArgs): Promise<DataWithResponseInit<SignupLoaderData> | Response> {
-  const { getSession } = await import('@/core/auth/cookie.server')
+  const { destroySession, getSession } = await import('@/core/auth/cookie.server')
+  const { verifyUserToken } = await import('@/core/auth/verify_token.server')
   const session = await getSession(request.headers.get('Cookie'))
   const tokenValue: unknown = session.get('token')
   const token = typeof tokenValue === 'string' ? tokenValue : ''
+
   if (token.length > 0) {
-    return redirect('/')
+    const user = verifyUserToken(token)
+
+    if (user) {
+      return redirect('/')
+    }
+
+    return redirect('/signup', {
+      headers: {
+        'Set-Cookie': await destroySession(session)
+      }
+    })
   }
 
   // Obtener parámetros de URL para pre-llenar datos de Google

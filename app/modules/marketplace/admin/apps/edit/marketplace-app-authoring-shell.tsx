@@ -13,7 +13,10 @@ interface AuthoringData {
     slug: string
     name: string
     summary: string
+    status: string
     access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
+    web_url: string | null
+    has_active_artifact: boolean
   }
   draft_storefront: {
     readiness_status: 'INCOMPLETE' | 'READY'
@@ -74,7 +77,9 @@ export function MarketplaceAppAuthoringShell({ authoring, isSubmitting, actionEr
     defaultValues: {
       name: authoring.app.name,
       summary: authoring.app.summary,
-      slug: authoring.app.slug
+      slug: authoring.app.slug,
+      access_mode: authoring.app.access_mode,
+      web_url: authoring.app.web_url ?? ''
     }
   })
 
@@ -170,12 +175,20 @@ export function MarketplaceAppAuthoringShell({ authoring, isSubmitting, actionEr
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-4 space-y-1">
             <h2 className="font-heading text-xl font-bold text-slate-900">Datos base de la app</h2>
-            <p className="text-sm text-slate-600">Estos datos mantienen la identidad general de la app en el catálogo.</p>
+            <p className="text-sm text-slate-600">Estos datos mantienen la identidad general de la app y sus requisitos operativos de activación.</p>
           </div>
 
           <Form method="post" className="space-y-4" noValidate onSubmit={handleBasicFormSubmit}>
             <input type="hidden" name="intent" value="save_basic" />
+            <input type="hidden" {...basicForm.register('access_mode')} value={authoring.app.access_mode} readOnly />
             <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-slate-700">Modo de acceso</p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+                  {authoring.app.access_mode === 'WEB_LINK' ? 'Enlace web' : 'Descarga de paquete'}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label htmlFor="name" className="text-sm font-semibold text-slate-700">
                   Nombre
@@ -211,6 +224,27 @@ export function MarketplaceAppAuthoringShell({ authoring, isSubmitting, actionEr
                 />
                 {basicForm.formState.errors.slug?.message && <p className="text-xs text-red-600">{basicForm.formState.errors.slug.message}</p>}
               </div>
+
+              {authoring.app.access_mode === 'WEB_LINK' ? (
+                <div className="space-y-1.5">
+                  <label htmlFor="web_url" className="text-sm font-semibold text-slate-700">
+                    URL web de la app
+                  </label>
+                  <input
+                    id="web_url"
+                    type="url"
+                    placeholder="https://..."
+                    {...basicForm.register('web_url')}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
+                  />
+                  <p className="text-xs text-slate-500">La activación de apps WEB_LINK requiere una URL HTTPS válida.</p>
+                  {basicForm.formState.errors.web_url?.message && <p className="text-xs text-red-600">{basicForm.formState.errors.web_url.message}</p>}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                  Las apps PACKAGE_DOWNLOAD requieren un artefacto activo para poder activarse desde el catálogo.
+                </div>
+              )}
             </div>
 
             <button
@@ -242,6 +276,10 @@ export function MarketplaceAppAuthoringShell({ authoring, isSubmitting, actionEr
           missingRequirements={authoring.draft_storefront.missing_requirements}
           draftUpdatedAt={authoring.draft_storefront.updated_at}
           publishedUpdatedAt={authoring.published_storefront?.published_at ?? null}
+          currentAppStatus={authoring.app.status}
+          accessMode={authoring.app.access_mode}
+          webUrl={authoring.app.web_url}
+          hasActiveArtifact={authoring.app.has_active_artifact}
           appId={authoring.app.id}
           canPublish={authoring.draft_storefront.readiness_status === 'READY'}
           isPublishing={isSubmitting}

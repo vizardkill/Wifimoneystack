@@ -10,6 +10,8 @@ import { trackError } from '@lib/functions/_track_error.function'
 
 import { CONFIG_GET_MARKETPLACE_APP_AUTHORING } from '@types'
 
+import { resolveMarketplaceMediaUrl } from './_resolve-marketplace-media-url.helper'
+
 type RequestStatus = CONFIG_GET_MARKETPLACE_APP_AUTHORING.RequestStatus
 type RequestResponse = CONFIG_GET_MARKETPLACE_APP_AUTHORING.RequestResponse
 type Payload = CONFIG_GET_MARKETPLACE_APP_AUTHORING.Payload
@@ -180,7 +182,7 @@ export class CLS_GetMarketplaceAppAuthoring {
               media: published.media.map((item) => ({
                 id: item.media.id,
                 type: item.media.type,
-                public_url: item.media.public_url,
+                public_url: resolveMarketplaceMediaUrl(item.media.public_url),
                 alt_text: item.media.alt_text,
                 sort_order: item.sort_order
               }))
@@ -190,7 +192,7 @@ export class CLS_GetMarketplaceAppAuthoring {
           draft?.media.map((item) => ({
             id: item.media.id,
             type: item.media.type,
-            public_url: item.media.public_url,
+            public_url: resolveMarketplaceMediaUrl(item.media.public_url),
             alt_text: item.media.alt_text,
             sort_order: item.sort_order,
             storage_key: item.media.storage_key ?? ''
@@ -198,7 +200,7 @@ export class CLS_GetMarketplaceAppAuthoring {
         media_library: this._mediaLibrary.map((media) => ({
           id: media.id,
           type: media.type,
-          public_url: media.public_url,
+          public_url: resolveMarketplaceMediaUrl(media.public_url),
           alt_text: media.alt_text,
           sort_order: media.sort_order,
           storage_key: media.storage_key ?? ''
