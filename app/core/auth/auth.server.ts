@@ -10,6 +10,7 @@ import { CLS_ResetPassword } from '@/core/auth/services/_reset-password.service'
 import { CLS_RegisterUser } from '@/core/auth/services/_signup.service'
 import { CLS_VerifyEmail } from '@/core/auth/services/_verification.service'
 
+import { trackError } from '@lib/functions/_track_error.function'
 import { type AuthLoginPayload, AuthProviderType, type AuthRegisterPayload, type AuthResult, type AuthValidationResult } from '@lib/interfaces'
 
 import {
@@ -22,6 +23,28 @@ import {
   type CONFIG_RESET_PASSWORD,
   type CONFIG_VERIFY_EMAIL
 } from '@types'
+
+type RegistrationResponse = Pick<AuthResult, 'error' | 'status' | 'data'> | CONFIG_REGISTER_USER.RequestResponse
+
+const ensureMarketplaceAccessRequested = async (response: RegistrationResponse): Promise<void> => {
+  const userId = response.data?.user?.id
+
+  if (response.error || typeof userId !== 'string' || userId.length === 0) {
+    return
+  }
+
+  try {
+    const { CLS_RequestMarketplaceAccess } = await import('@/core/marketplace/marketplace.server')
+    await new CLS_RequestMarketplaceAccess({ user_id: userId }).main()
+  } catch (error) {
+    trackError({
+      method: 'ensureMarketplaceAccessRequested',
+      controller: 'auth-server',
+      error: error as Error,
+      additionalContext: { user_id: userId }
+    })
+  }
+}
 
 /**
  * Servidor de autenticación principal
@@ -59,6 +82,7 @@ export class AuthServer {
 export const signUpController = async (payload: CONFIG_REGISTER_USER.Payload): Promise<CONFIG_REGISTER_USER.RequestResponse> => {
   const result = new CLS_RegisterUser(payload)
   const response = await result.main()
+  await ensureMarketplaceAccessRequested(response)
   return response
 }
 
@@ -107,7 +131,9 @@ export const promoteUserToAdminController = async (payload: CONFIG_PROMOTE_USER_
  */
 export const registerUserAgnosticController = async (payload: AuthRegisterPayload): Promise<AuthResult> => {
   AuthServer.initialize()
-  return authOrchestrator.register(payload)
+  const response = await authOrchestrator.register(payload)
+  await ensureMarketplaceAccessRequested(response)
+  return response
 }
 
 /**

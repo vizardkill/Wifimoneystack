@@ -4,7 +4,7 @@ import { CheckCircle, Clock, ShieldX, XCircle } from 'lucide-react'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { Form, useLoaderData } from 'react-router'
 
-import { CLS_GetMarketplaceAccessStatus } from '@/core/marketplace/marketplace.server'
+import { CLS_GetMarketplaceAccessStatus, CLS_RequestMarketplaceAccess } from '@/core/marketplace/marketplace.server'
 
 import { getAccessStatusMessage } from '@lib/helpers/_marketplace-access.helper'
 
@@ -29,16 +29,35 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const result = await new CLS_GetMarketplaceAccessStatus({ user_id: user.id }).main()
+  let accessStatus = result.data?.access_status ?? 'NONE'
+  let decidedAt = result.data?.decided_at ?? null
+  let decisionReason = result.data?.decision_reason ?? null
+
+  // Backfill suave para cuentas creadas antes de automatizar la solicitud.
+  if (accessStatus === 'NONE') {
+    const requestResult = await new CLS_RequestMarketplaceAccess({ user_id: user.id }).main()
+
+    if (!requestResult.error && requestResult.data?.access_status === 'PENDING') {
+      accessStatus = 'PENDING'
+      decidedAt = null
+      decisionReason = null
+    } else {
+      const refreshed = await new CLS_GetMarketplaceAccessStatus({ user_id: user.id }).main()
+      accessStatus = refreshed.data?.access_status ?? accessStatus
+      decidedAt = refreshed.data?.decided_at ?? decidedAt
+      decisionReason = refreshed.data?.decision_reason ?? decisionReason
+    }
+  }
 
   // If approved, send to marketplace
-  if (result.data?.access_status === 'APPROVED') {
+  if (accessStatus === 'APPROVED') {
     throw redirect('/marketplace')
   }
 
   return {
-    access_status: result.data?.access_status ?? 'NONE',
-    decided_at: result.data?.decided_at ?? null,
-    decision_reason: result.data?.decision_reason ?? null,
+    access_status: accessStatus,
+    decided_at: decidedAt,
+    decision_reason: decisionReason,
     user_email: user.email
   }
 }
@@ -48,8 +67,8 @@ const STATUS_CONFIG = {
     icon: Clock,
     color: 'text-yellow-500',
     bg: 'bg-yellow-50 border-yellow-200',
-    title: 'Solicitud en revisión',
-    subtitle: 'Estamos revisando tu solicitud de acceso al marketplace.'
+    title: 'Acceso en revisión',
+    subtitle: 'Pronto un administrador revisará tu acceso al marketplace.'
   },
   REJECTED: {
     icon: XCircle,
@@ -69,8 +88,8 @@ const STATUS_CONFIG = {
     icon: CheckCircle,
     color: 'text-gray-400',
     bg: 'bg-gray-50 border-gray-200',
-    title: 'Sin solicitud',
-    subtitle: 'Aún no has solicitado acceso al marketplace.'
+    title: 'Solicitud pendiente de crear',
+    subtitle: 'Tu cuenta existe, pero todavía no encontramos una solicitud activa de acceso.'
   }
 } as const
 
@@ -121,7 +140,9 @@ export default function AccessStatusPage(): JSX.Element {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          {status === 'PENDING' && <p className="text-center text-sm text-muted-foreground">Te notificaremos por email cuando tu solicitud sea revisada.</p>}
+          {status === 'PENDING' && (
+            <p className="text-center text-sm text-muted-foreground">Te notificaremos por email cuando un administrador apruebe o rechace tu acceso.</p>
+          )}
           <Form method="post" action="/api/v1/auth/sessions">
             <button
               type="submit"

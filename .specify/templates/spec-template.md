@@ -92,6 +92,13 @@
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
+### Frontend Composition Notes _(mandatory for UI-heavy features)_
+
+- **FC-001**: Define route responsibilities vs module responsibilities for each affected screen.
+- **FC-002**: Specify module decomposition under `app/modules/{feature}/` (at minimum components + hooks; include forms/lib/types when complexity requires).
+- **FC-003**: For nontrivial forms, define client validation contract (`react-hook-form` + `zodResolver`) and matching server-side Zod validation.
+- **FC-004**: If actions use multiple intents, define per-intent schema and dispatch strategy.
+
 _Example of marking unclear requirements:_
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]

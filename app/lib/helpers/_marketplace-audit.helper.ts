@@ -50,6 +50,30 @@ export function buildAppAuditMeta(params: {
 }
 
 /**
+ * Construir metadata de auditoría para eventos de storefront.
+ */
+export function buildStorefrontAuditMeta(params: {
+  app_id: string
+  action: MarketplaceAuditAction
+  storefront_version_id?: string
+  storefront_kind?: 'DRAFT' | 'PUBLISHED'
+  readiness_status?: 'INCOMPLETE' | 'READY'
+  missing_requirements?: string[]
+  media_ids?: string[]
+}): Record<string, unknown> {
+  return {
+    app_id: params.app_id,
+    storefront_version_id: params.storefront_version_id,
+    storefront_kind: params.storefront_kind,
+    readiness_status: params.readiness_status,
+    missing_requirements: params.missing_requirements,
+    media_ids: params.media_ids,
+    action: params.action,
+    timestamp: new Date().toISOString()
+  }
+}
+
+/**
  * Construir metadata de auditoría para promoción administrativa.
  */
 export function buildAdminPromotionAuditMeta(params: { target_email: string; previous_role: 'USER'; promoted_role: 'ADMIN' }): Record<string, unknown> {

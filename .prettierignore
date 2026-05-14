@@ -2,6 +2,8 @@
 .shadowenv.d
 .vscode
 build
+dist
+coverage
 node_modules
 prisma
 public
@@ -15,3 +17,5 @@ tmp
 # Ignore generated/release metadata files
 CHANGELOG.md
 package-lock.json
+yarn.lock
+pnpm-lock.yaml

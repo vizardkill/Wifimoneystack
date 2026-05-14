@@ -38,6 +38,153 @@ const writeStderr = (message: string): void => {
   process.stderr.write(`${message}\n`)
 }
 
+const normalizePort = (value: string | number | undefined): string | null => {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return null
+  }
+
+  const normalized = String(value).trim().replace(/^:/, '')
+  return normalized.length > 0 ? normalized : null
+}
+
+const toHostPattern = (value: string | undefined): string | null => {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const raw = value.trim()
+  if (raw.length === 0) {
+    return null
+  }
+
+  try {
+    return new URL(raw).host
+  } catch {
+    const withoutProtocol = raw.replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//, '')
+    const hostOnly = withoutProtocol.split('/')[0]?.trim() ?? ''
+    return hostOnly.length > 0 ? hostOnly : null
+  }
+}
+
+const getSingleHeaderValue = (value: string | string[] | undefined): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0]
+  }
+
+  return value
+}
+
+const normalizeForwardedHostForLocal = (req: Request): void => {
+  if (process.env.BUILD === 'production') {
+    return
+  }
+
+  const originHeader = getSingleHeaderValue(req.headers.origin)
+  const originHost = toHostPattern(originHeader)
+  if (!originHost) {
+    return
+  }
+
+  const hostRaw = getSingleHeaderValue(req.headers.host)
+  const hostHeader = typeof hostRaw === 'string' ? hostRaw.trim() : ''
+  if (hostHeader && hostHeader !== originHost) {
+    req.headers.host = originHost
+  }
+
+  const forwardedRaw = getSingleHeaderValue(req.headers['x-forwarded-host'])
+  const forwardedHost = typeof forwardedRaw === 'string' ? forwardedRaw.split(',')[0]?.trim() : ''
+  if (forwardedHost && forwardedHost !== originHost) {
+    req.headers['x-forwarded-host'] = originHost
+  }
+}
+
+const debugActionOriginHeaders = (req: Request): void => {
+  if (process.env.DEBUG_ACTION_ORIGIN_CHECK !== 'true') {
+    return
+  }
+
+  if (req.method !== 'POST') {
+    return
+  }
+
+  const isAuthoringEditAction = /^\/dashboard\/marketplace\/apps\/[^/]+\/edit\/?$/.test(req.path)
+  if (!isAuthoringEditAction) {
+    return
+  }
+
+  const origin = getSingleHeaderValue(req.headers.origin) ?? '-'
+  const host = getSingleHeaderValue(req.headers.host) ?? '-'
+  const xForwardedHost = getSingleHeaderValue(req.headers['x-forwarded-host']) ?? '-'
+  const referer = getSingleHeaderValue(req.headers.referer) ?? '-'
+
+  writeStdout(`[ACTION-CSRF-DEBUG] method=${req.method} path=${req.path} origin=${origin} host=${host} x-forwarded-host=${xForwardedHost} referer=${referer}`)
+}
+
+const collectAllowedActionOrigins = (): string[] => {
+  const allowList = new Set<string>()
+
+  const addHostPattern = (value: string | undefined): void => {
+    const hostPattern = toHostPattern(value)
+    if (hostPattern) {
+      allowList.add(hostPattern)
+    }
+  }
+
+  addHostPattern(process.env.APP_URL)
+  addHostPattern(process.env.NGROK_URL)
+
+  const corsAllowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  if (typeof corsAllowedOrigins === 'string' && corsAllowedOrigins.trim().length > 0) {
+    for (const value of corsAllowedOrigins.split(',')) {
+      addHostPattern(value)
+    }
+  }
+
+  const hostName = process.env.HOST_NAME.trim()
+  const hostPort = normalizePort(process.env.HOST_PORT)
+  if (hostName) {
+    allowList.add(hostName)
+    if (hostPort) {
+      allowList.add(`${hostName}:${hostPort}`)
+    }
+  }
+
+  const localPorts = new Set<string>()
+  for (const value of [process.env.PORT, process.env.FRONTEND_PORT, process.env.HOST_PORT]) {
+    const normalizedPort = normalizePort(value)
+    if (normalizedPort) {
+      localPorts.add(normalizedPort)
+    }
+  }
+
+  for (const localHost of ['localhost', '127.0.0.1', '0.0.0.0']) {
+    allowList.add(localHost)
+    for (const port of localPorts) {
+      allowList.add(`${localHost}:${port}`)
+    }
+  }
+
+  // Conveniencia en desarrollo con túneles efímeros.
+  allowList.add('*.ngrok-free.app')
+  allowList.add('*.ngrok.app')
+  allowList.add('*.ngrok.io')
+
+  return Array.from(allowList)
+}
+
+const withRuntimeAllowedActionOrigins = (build: ServerBuild): ServerBuild => {
+  const buildAllowedOrigins = Array.isArray((build as { allowedActionOrigins?: string[] }).allowedActionOrigins)
+    ? ((build as { allowedActionOrigins?: string[] }).allowedActionOrigins ?? [])
+    : []
+
+  const runtimeAllowedOrigins = collectAllowedActionOrigins()
+
+  return {
+    ...build,
+    allowedActionOrigins: Array.from(new Set([...buildAllowedOrigins, ...runtimeAllowedOrigins]))
+  }
+}
+
 // Cargar las variables de entorno
 DotenvFlow.config({ silent: true })
 
@@ -351,14 +498,27 @@ class AppServer {
 
     const serverBuildUrl = pathToFileURL(path.resolve(process.cwd(), 'build/server/index.js')).href
 
-    const remixHandler = createRequestHandler({
-      build: this.viteDevServer
-        ? () => this.viteDevServer?.ssrLoadModule('virtual:react-router/server-build') as Promise<ServerBuild>
-        : ((await import(serverBuildUrl)) as ServerBuild)
-    })
+    const remixHandler = this.viteDevServer
+      ? createRequestHandler({
+          build: async () => {
+            const devBuild = (await this.viteDevServer?.ssrLoadModule('virtual:react-router/server-build')) as ServerBuild
+            return withRuntimeAllowedActionOrigins(devBuild)
+          }
+        })
+      : createRequestHandler({
+          build: withRuntimeAllowedActionOrigins((await import(serverBuildUrl)) as ServerBuild)
+        })
 
     this.app.get(['/docs', '/docs/{*splat}'], (_req: Request, res: Response) => {
       res.sendFile(path.join(process.cwd(), 'docs', 'index.html'))
+    })
+
+    this.app.use((req: Request, _res: Response, next: NextFunction) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        normalizeForwardedHostForLocal(req)
+        debugActionOriginHeaders(req)
+      }
+      next()
     })
 
     this.app.all('{*path}', remixHandler)

@@ -103,6 +103,15 @@ const mediaProxyAuthMiddleware = async (req: MediaProxyRequest, res: Response, n
     return
   }
 
+  if (payload.scope === 'public_prefixed') {
+    const allowedPrefix = typeof payload.allowedPrefix === 'string' ? payload.allowedPrefix : ''
+    const hasAllowedPrefix = allowedPrefix.length > 0
+    if (!hasAllowedPrefix || !payload.objectPath.startsWith(allowedPrefix)) {
+      jsonError(res, 403, 'Token inválido o expirado.')
+      return
+    }
+  }
+
   try {
     const signedReadUrl = await getOrCreateSignedReadUrl(payload.containerName, payload.objectPath)
     const parsedSignedReadUrl = new URL(signedReadUrl)

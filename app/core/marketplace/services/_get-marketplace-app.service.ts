@@ -6,6 +6,8 @@ import { trackError } from '@lib/functions/_track_error.function'
 
 import { CONFIG_GET_MARKETPLACE_APP } from '@types'
 
+import { resolveMarketplaceMediaUrl } from './_resolve-marketplace-media-url.helper'
+
 type RequestStatus = CONFIG_GET_MARKETPLACE_APP.RequestStatus
 type RequestResponse = CONFIG_GET_MARKETPLACE_APP.RequestResponse
 type Payload = CONFIG_GET_MARKETPLACE_APP.Payload
@@ -14,6 +16,7 @@ export class CLS_GetMarketplaceApp {
   private _payload!: Payload
   private _statusRequest: RequestStatus = CONFIG_GET_MARKETPLACE_APP.RequestStatus.Pending
   private _requestResponse: RequestResponse | null = null
+  private _app: Awaited<ReturnType<typeof MarketplaceAppDB.findByIdForPublicDetail>> = null
 
   constructor(payload: Payload) {
     this._payload = payload
@@ -36,8 +39,6 @@ export class CLS_GetMarketplaceApp {
     return this._requestResponse
   }
 
-  private _app: Awaited<ReturnType<typeof MarketplaceAppDB.findByIdWithMedia>> = null
-
   private async _verifyAccess(): Promise<void> {
     try {
       const request = await AccessRequestDB.findByUserId(this._payload.user_id)
@@ -58,7 +59,7 @@ export class CLS_GetMarketplaceApp {
 
   private async _fetchApp(): Promise<void> {
     try {
-      this._app = await MarketplaceAppDB.findByIdWithMedia(this._payload.app_id)
+      this._app = await MarketplaceAppDB.findByIdForPublicDetail(this._payload.app_id)
       if (this._app?.status !== 'ACTIVE') {
         this._statusRequest = CONFIG_GET_MARKETPLACE_APP.RequestStatus.NotFound
         this._requestResponse = { error: true, message: 'Aplicación no encontrada o no disponible.' }
@@ -86,25 +87,67 @@ export class CLS_GetMarketplaceApp {
 
   private async _buildResponse(): Promise<void> {
     const app = this._app!
+    const publishedStorefront = app.published_storefront
+    const hasPublishedStorefront = publishedStorefront?.readiness_status === 'READY'
+
+    const legacyMedia = app.media.map((media) => ({
+      id: media.id,
+      type: media.type,
+      public_url: resolveMarketplaceMediaUrl(media.public_url),
+      alt_text: media.alt_text,
+      sort_order: media.sort_order
+    }))
+
+    const storefrontMedia = hasPublishedStorefront
+      ? publishedStorefront.media.map((relation) => ({
+          id: relation.media.id,
+          type: relation.media.type,
+          public_url: resolveMarketplaceMediaUrl(relation.media.public_url),
+          alt_text: relation.media.alt_text,
+          sort_order: relation.sort_order
+        }))
+      : []
+
+    const storefrontLanguages = hasPublishedStorefront
+      ? publishedStorefront.languages.map((relation) => ({
+          code: relation.language.code,
+          label: relation.language.label,
+          sort_order: relation.sort_order
+        }))
+      : []
+
+    const presentation_mode = hasPublishedStorefront ? 'STOREFRONT' : 'LEGACY'
+
     this._statusRequest = CONFIG_GET_MARKETPLACE_APP.RequestStatus.Completed
     this._requestResponse = {
       data: {
         id: app.id,
         slug: app.slug,
         name: app.name,
-        summary: app.summary,
-        description: app.description,
-        instructions: app.instructions,
+        summary: hasPublishedStorefront ? publishedStorefront.summary : app.summary,
+        description: hasPublishedStorefront ? publishedStorefront.description : app.description,
+        instructions: hasPublishedStorefront ? publishedStorefront.instructions : app.instructions,
         access_mode: app.access_mode,
         web_url: app.web_url,
-        media: app.media.map((m) => ({
-          id: m.id,
-          type: m.type,
-          public_url: m.public_url,
-          alt_text: m.alt_text,
-          sort_order: m.sort_order
-        })),
-        has_active_artifact: app.active_artifact !== null
+        presentation_mode,
+        media: hasPublishedStorefront ? storefrontMedia : legacyMedia,
+        storefront: hasPublishedStorefront
+          ? {
+              summary: publishedStorefront.summary,
+              description: publishedStorefront.description,
+              instructions: publishedStorefront.instructions,
+              developer_name: publishedStorefront.developer_name,
+              developer_website: publishedStorefront.developer_website,
+              support_email: publishedStorefront.support_email,
+              support_url: publishedStorefront.support_url,
+              languages: storefrontLanguages,
+              media: storefrontMedia,
+              video_url:
+                storefrontMedia.find((media) => media.type === 'VIDEO' && typeof media.public_url === 'string' && media.public_url.length > 0)?.public_url ??
+                null
+            }
+          : null,
+        has_active_artifact: Boolean(app.active_artifact)
       }
     }
   }

@@ -26,7 +26,7 @@ export function hasApprovedAccess(status: MarketplaceAccessStatus | null | undef
 export function getAccessStatusMessage(status: MarketplaceAccessStatus | null | undefined): string {
   switch (status) {
     case 'PENDING':
-      return 'Tu solicitud está siendo revisada. Te notificaremos cuando reciba una decisión.'
+      return 'Tu cuenta fue creada correctamente y pronto un administrador revisará tu acceso al marketplace.'
     case 'APPROVED':
       return 'Tienes acceso al marketplace.'
     case 'REJECTED':
@@ -34,7 +34,7 @@ export function getAccessStatusMessage(status: MarketplaceAccessStatus | null | 
     case 'REVOKED':
       return 'Tu acceso fue revocado. Contacta soporte para más información.'
     default:
-      return 'Solicita acceso para explorar el marketplace.'
+      return 'Tu solicitud de acceso todavía no aparece registrada. Recarga la página o contacta soporte si este mensaje persiste.'
   }
 }
 

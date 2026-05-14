@@ -1,4 +1,4 @@
-import type { MarketplaceAppAccessMode } from '@prisma/client'
+import type { MarketplaceAppAccessMode, MarketplaceAppStatus } from '@prisma/client'
 
 // ── US1: Solicitar acceso al marketplace ──────────────────────────────────────
 
@@ -124,6 +124,7 @@ export namespace CONFIG_GET_MARKETPLACE_APP {
       instructions: string
       access_mode: MarketplaceAppAccessMode
       web_url: string | null
+      presentation_mode?: 'LEGACY' | 'STOREFRONT'
       media: Array<{
         id: string
         type: string
@@ -131,7 +132,326 @@ export namespace CONFIG_GET_MARKETPLACE_APP {
         alt_text: string | null
         sort_order: number
       }>
+      storefront?: {
+        summary: string
+        description: string
+        instructions: string
+        developer_name: string
+        developer_website: string
+        support_email: string | null
+        support_url: string | null
+        languages: Array<{
+          code: string
+          label: string
+          sort_order: number
+        }>
+        media: Array<{
+          id: string
+          type: string
+          public_url: string | null
+          alt_text: string | null
+          sort_order: number
+        }>
+        video_url: string | null
+      } | null
       has_active_artifact: boolean
+    }
+  }
+}
+
+// ── Admin: Storefront authoring (Feature 003) ────────────────────────────────
+
+export namespace CONFIG_GET_MARKETPLACE_APP_AUTHORING {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    NotFound = 'not_found',
+    Forbidden = 'forbidden',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      app: {
+        id: string
+        slug: string
+        name: string
+        status: string
+        access_mode: MarketplaceAppAccessMode
+        web_url: string | null
+        summary: string
+        description: string
+        instructions: string
+        has_active_artifact: boolean
+      }
+      draft_storefront: {
+        id: string | null
+        readiness_status: 'INCOMPLETE' | 'READY'
+        summary: string
+        description: string
+        instructions: string
+        developer_name: string
+        developer_website: string
+        support_email: string | null
+        support_url: string | null
+        language_codes: string[]
+        missing_requirements: string[]
+        updated_at: Date | null
+      }
+      published_storefront: {
+        id: string
+        published_at: Date | null
+        summary: string
+        description: string
+        instructions: string
+        developer_name: string
+        developer_website: string
+        support_email: string | null
+        support_url: string | null
+        language_codes: string[]
+        media: Array<{
+          id: string
+          type: string
+          public_url: string | null
+          alt_text: string | null
+          sort_order: number
+        }>
+      } | null
+      draft_media: Array<{
+        id: string
+        type: string
+        public_url: string | null
+        alt_text: string | null
+        sort_order: number
+        storage_key: string
+      }>
+      media_library: Array<{
+        id: string
+        type: string
+        public_url: string | null
+        alt_text: string | null
+        sort_order: number
+        storage_key: string
+      }>
+      language_catalog: Array<{
+        code: string
+        label: string
+        sort_order: number
+        is_active: boolean
+      }>
+    }
+  }
+}
+
+export namespace CONFIG_SAVE_MARKETPLACE_APP_STOREFRONT_DRAFT {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Validation = 'validation',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    summary: string
+    description: string
+    instructions: string
+    developer_name: string
+    developer_website?: string
+    support_email?: string
+    support_url?: string
+    language_codes: string[]
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    field_errors?: Record<string, string>
+    data?: {
+      app_id: string
+      storefront_version_id: string
+      readiness_status: 'INCOMPLETE' | 'READY'
+      missing_requirements: string[]
+      updated_at: Date
+    }
+  }
+}
+
+export namespace CONFIG_PUBLISH_MARKETPLACE_APP_STOREFRONT {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    ValidationFailed = 'validation_failed',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      app_id: string
+      published_storefront_version_id: string
+      published_at: Date
+    }
+  }
+}
+
+export namespace CONFIG_PREPARE_MARKETPLACE_APP_MEDIA_UPLOAD {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Validation = 'validation',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    media_type: 'ICON' | 'SCREENSHOT'
+    file_name: string
+    content_type: string
+    size_bytes: number
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    field_errors?: Record<string, string>
+    data?: {
+      app_id: string
+      media_type: 'ICON' | 'SCREENSHOT'
+      signed_url: string
+      public_url: string
+      storage_key: string
+      expires_in_seconds: number
+    }
+  }
+}
+
+export namespace CONFIG_REGISTER_MARKETPLACE_APP_MEDIA {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Validation = 'validation',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    media_type: 'ICON' | 'SCREENSHOT' | 'VIDEO'
+    storage_key?: string
+    public_url?: string
+    external_video_url?: string
+    alt_text?: string
+    attach_to_draft?: boolean
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    field_errors?: Record<string, string>
+    data?: {
+      app_id: string
+      media: {
+        id: string
+        type: string
+        storage_key: string
+        public_url: string | null
+        alt_text: string | null
+        sort_order: number
+      }
+      attached_to_draft: boolean
+      readiness_status: 'INCOMPLETE' | 'READY'
+      missing_requirements: string[]
+    }
+  }
+}
+
+export namespace CONFIG_REMOVE_MARKETPLACE_APP_MEDIA {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Validation = 'validation',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    media_id: string
+    detach_from_draft?: boolean
+    remove_from_library?: boolean
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      app_id: string
+      media_id: string
+      detached_from_draft: boolean
+      removed_from_library: boolean
+      readiness_status: 'INCOMPLETE' | 'READY'
+      missing_requirements: string[]
+    }
+  }
+}
+
+export namespace CONFIG_REORDER_MARKETPLACE_APP_STOREFRONT_MEDIA {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Validation = 'validation',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    ordered_media_ids: string[]
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      app_id: string
+      ordered_media_ids: string[]
+      readiness_status: 'INCOMPLETE' | 'READY'
+      missing_requirements: string[]
     }
   }
 }
@@ -286,6 +606,41 @@ export namespace CONFIG_REVOKE_MARKETPLACE_ACCESS {
     status?: RequestStatus
     data?: {
       request_id: string
+    }
+  }
+}
+
+// ── US4: Crear/editar app (admin) ─────────────────────────────────────────────
+
+export namespace CONFIG_LIST_ADMIN_MARKETPLACE_APPS {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    actor_user_id: string
+    page?: number
+    per_page?: number
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: {
+      apps: Array<{
+        id: string
+        slug: string
+        name: string
+        status: MarketplaceAppStatus
+        access_mode: MarketplaceAppAccessMode
+        icon_url: string | null
+      }>
+      total: number
+      page: number
+      per_page: number
     }
   }
 }

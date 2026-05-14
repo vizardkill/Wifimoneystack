@@ -33,6 +33,18 @@ El sistema es un monolito web (React Router + Node + Prisma + PostgreSQL) con do
 4. Revisa metricas de uso agregadas (`marketplace_usage_events`).
 5. Cada accion sensible se registra en auditoria (`marketplace_audit_events`).
 
+### Flujo de authoring y publicacion de storefront (Feature 003)
+
+1. El admin abre `/dashboard/marketplace/apps/:appId/edit`.
+2. El loader devuelve un snapshot completo de authoring: app base, borrador (`DRAFT`), version publicada (`PUBLISHED`), media, idiomas y readiness.
+3. Al guardar contenido de vitrina (`save_storefront_draft`), se persisten campos editoriales, se reemplazan idiomas seleccionados y se recalcula readiness.
+4. La gestion de media (`register_media`, `remove_media`, `reorder_media`) solo afecta el borrador; la vitrina publicada permanece estable.
+5. Solo cuando el borrador esta `READY`, `publish_storefront` promueve el snapshot a `PUBLISHED`.
+6. La ruta publica `/marketplace/apps/:appId` usa `presentation_mode`:
+   - `STOREFRONT` cuando existe version publicada lista.
+   - `LEGACY` cuando aun no existe una vitrina publicada.
+7. Cada accion sensible deja auditoria dedicada: `APP_STOREFRONT_DRAFT_SAVED`, `APP_STOREFRONT_MEDIA_UPDATED`, `APP_STOREFRONT_PUBLISHED`.
+
 ### Roles administrativos
 
 - `ADMIN`: puede operar modulos Dashboard, Usuarios y Apps.
@@ -74,6 +86,14 @@ recibe conflicto para refrescar datos.
 - `DRAFT` -> `ACTIVE`
 - `ACTIVE` -> `INACTIVE`
 - `INACTIVE` -> `ACTIVE`
+
+### Storefront Version
+
+- `DRAFT/INCOMPLETE` -> `DRAFT/READY`
+- `DRAFT/READY` -> `DRAFT/INCOMPLETE` (si se elimina contenido obligatorio)
+- `DRAFT/READY` --publish--> `PUBLISHED/READY`
+
+Nota: el estado operativo de la app (`DRAFT`/`ACTIVE`/`INACTIVE`) es independiente del estado de storefront.
 
 ## Comandos operativos recomendados
 

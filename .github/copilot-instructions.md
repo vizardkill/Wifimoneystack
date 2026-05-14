@@ -1,4 +1,4 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read specs/002-admin-marketplace-console/plan.md
+shell commands, and other important information, read specs/003-admin-listing-authoring/plan.md
 <!-- SPECKIT END -->

@@ -132,6 +132,16 @@ enum MarketplaceMediaType {
   VIDEO
 }
 
+enum MarketplaceStorefrontVersionKind {
+  DRAFT
+  PUBLISHED
+}
+
+enum MarketplaceStorefrontReadinessStatus {
+  INCOMPLETE
+  READY
+}
+
 enum MarketplaceUsageEventType {
   DETAIL_VIEW
   WEB_OPEN
@@ -151,6 +161,9 @@ enum MarketplaceAuditAction {
   APP_UNPUBLISHED
   APP_MEDIA_UPDATED
   APP_ARTIFACT_UPDATED
+  APP_STOREFRONT_DRAFT_SAVED
+  APP_STOREFRONT_PUBLISHED
+  APP_STOREFRONT_MEDIA_UPDATED
 }
 
 // ── Marketplace Models ─────────────────────────────────────────────────────────
@@ -196,6 +209,7 @@ model MarketplaceApp {
   artifacts          MarketplaceAppArtifact[]
   usage_events       MarketplaceUsageEvent[]
   audit_events       MarketplaceAuditEvent[]
+  storefront_versions MarketplaceAppStorefrontVersion[]
 
   @@index([status, access_mode, created_at])
   @@map("marketplace_apps")
@@ -206,7 +220,7 @@ model MarketplaceAppMedia {
   id           String               @id @default(uuid())
   app_id       String
   type         MarketplaceMediaType
-  storage_key  String
+  storage_key  String?
   public_url   String?
   alt_text     String?
   sort_order   Int                  @default(0)
@@ -214,9 +228,88 @@ model MarketplaceAppMedia {
   updated_at   DateTime             @updatedAt
 
   app          MarketplaceApp       @relation(fields: [app_id], references: [id])
+  storefront_media MarketplaceAppStorefrontVersionMedia[]
 
   @@index([app_id, type])
+  @@index([app_id, sort_order])
   @@map("marketplace_app_media")
+}
+
+/// Versiones de storefront (draft/publicada) para una app
+model MarketplaceAppStorefrontVersion {
+  id                 String                            @id @default(uuid())
+  app_id             String
+  kind               MarketplaceStorefrontVersionKind
+  readiness_status   MarketplaceStorefrontReadinessStatus @default(INCOMPLETE)
+  summary            String                            @default("")
+  description        String                            @default("")
+  instructions       String                            @default("")
+  developer_name     String                            @default("")
+  developer_website  String                            @default("")
+  support_email      String?
+  support_url        String?
+  created_by_user_id String
+  updated_by_user_id String?
+  published_at       DateTime?
+  created_at         DateTime                          @default(now())
+  updated_at         DateTime                          @updatedAt
+
+  app                MarketplaceApp                    @relation(fields: [app_id], references: [id])
+  languages          MarketplaceAppStorefrontVersionLanguage[]
+  media              MarketplaceAppStorefrontVersionMedia[]
+
+  @@unique([app_id, kind])
+  @@index([app_id, kind, readiness_status])
+  @@map("marketplace_app_storefront_versions")
+}
+
+/// Catálogo controlado de idiomas para storefront
+model MarketplaceLanguageCatalog {
+  code        String                                  @id @db.VarChar(12)
+  label       String                                  @db.VarChar(80)
+  sort_order  Int                                     @default(0)
+  is_active   Boolean                                 @default(true)
+  created_at  DateTime                                @default(now())
+  updated_at  DateTime                                @updatedAt
+
+  storefront_versions MarketplaceAppStorefrontVersionLanguage[]
+
+  @@index([is_active, sort_order])
+  @@map("marketplace_language_catalog")
+}
+
+/// Idiomas seleccionados para una versión de storefront
+model MarketplaceAppStorefrontVersionLanguage {
+  id                    String                        @id @default(uuid())
+  storefront_version_id String
+  language_code         String                        @db.VarChar(12)
+  sort_order            Int                           @default(0)
+  created_at            DateTime                      @default(now())
+  updated_at            DateTime                      @updatedAt
+
+  storefront_version    MarketplaceAppStorefrontVersion @relation(fields: [storefront_version_id], references: [id], onDelete: Cascade)
+  language              MarketplaceLanguageCatalog    @relation(fields: [language_code], references: [code])
+
+  @@unique([storefront_version_id, language_code])
+  @@index([storefront_version_id, sort_order])
+  @@map("marketplace_app_storefront_version_languages")
+}
+
+/// Media asociada a una versión de storefront (con orden)
+model MarketplaceAppStorefrontVersionMedia {
+  id                    String                        @id @default(uuid())
+  storefront_version_id String
+  media_id              String
+  sort_order            Int                           @default(0)
+  created_at            DateTime                      @default(now())
+  updated_at            DateTime                      @updatedAt
+
+  storefront_version    MarketplaceAppStorefrontVersion @relation(fields: [storefront_version_id], references: [id], onDelete: Cascade)
+  media                 MarketplaceAppMedia           @relation(fields: [media_id], references: [id], onDelete: Cascade)
+
+  @@unique([storefront_version_id, media_id])
+  @@index([storefront_version_id, sort_order])
+  @@map("marketplace_app_storefront_version_media")
 }
 
 /// Artefacto (ZIP/paquete) disponible para descarga de una app
