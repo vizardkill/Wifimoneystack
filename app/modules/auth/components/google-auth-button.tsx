@@ -15,8 +15,15 @@ export function GoogleAuthButton({ mode, disabled = false, className = '' }: Goo
 
   const handleGoogleAuth = useCallback(() => {
     setIsLoading(true)
-    // Redirigir al endpoint de Google OAuth
-    window.location.href = `/api/v1/auth/oauth/google?mode=${mode}&ts=${Date.now()}`
+    const currentUrl = new URL(window.location.href)
+    const returnTo = currentUrl.searchParams.get('returnTo')
+    const googleUrl = new URL('/api/v1/auth/oauth/google', window.location.origin)
+    googleUrl.searchParams.set('mode', mode)
+    googleUrl.searchParams.set('ts', String(Date.now()))
+    if (typeof returnTo === 'string' && returnTo.trim().length > 0) {
+      googleUrl.searchParams.set('returnTo', returnTo)
+    }
+    window.location.href = googleUrl.toString()
   }, [mode])
 
   return (

@@ -11,6 +11,7 @@ import { getAccessStatusMessage } from '@lib/helpers/_marketplace-access.helper'
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getSession } = await import('@/core/auth/cookie.server')
   const { verifyUserToken } = await import('@/core/auth/verify_token.server')
+  const { getReturnToFromRequest } = await import('@/core/auth/subapp-session.server')
 
   const session = await getSession(request.headers.get('Cookie'))
   const token = typeof session.get('token') === 'string' ? (session.get('token') as string) : ''
@@ -32,6 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   let accessStatus = result.data?.access_status ?? 'NONE'
   let decidedAt = result.data?.decided_at ?? null
   let decisionReason = result.data?.decision_reason ?? null
+  const safeReturnTo = getReturnToFromRequest(request)
 
   // Backfill suave para cuentas creadas antes de automatizar la solicitud.
   if (accessStatus === 'NONE') {
@@ -51,6 +53,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // If approved, send to marketplace
   if (accessStatus === 'APPROVED') {
+    if (safeReturnTo) {
+      throw redirect(`/api/v1/auth/subapp/authorize?returnTo=${encodeURIComponent(safeReturnTo)}`)
+    }
     throw redirect('/marketplace')
   }
 

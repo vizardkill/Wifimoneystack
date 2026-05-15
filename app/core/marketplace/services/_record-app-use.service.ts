@@ -10,6 +10,55 @@ type RequestStatus = CONFIG_RECORD_MARKETPLACE_APP_USE.RequestStatus
 type RequestResponse = CONFIG_RECORD_MARKETPLACE_APP_USE.RequestResponse
 type Payload = CONFIG_RECORD_MARKETPLACE_APP_USE.Payload
 
+const normalizeRootDomain = (): string | null => {
+  const configured = process.env.SUBAPP_ROOT_DOMAIN?.trim() || process.env.SUBAPP_COOKIE_DOMAIN?.trim()
+
+  if (!configured) {
+    return null
+  }
+
+  return (
+    configured
+      .replace(/^https?:\/\//, '')
+      .replace(/^\./, '')
+      .split('/')[0] || null
+  )
+}
+
+const shouldUseAuthorizeBridge = (targetUrl: string): boolean => {
+  const rootDomain = normalizeRootDomain()
+  if (!rootDomain) {
+    return false
+  }
+
+  try {
+    const parsedTarget = new URL(targetUrl)
+    return parsedTarget.hostname === rootDomain || parsedTarget.hostname.endsWith(`.${rootDomain}`)
+  } catch {
+    return false
+  }
+}
+
+const buildProtectedRedirectUrl = (targetUrl: string): string => {
+  const appUrl = process.env.APP_URL
+  if (!appUrl) {
+    return targetUrl
+  }
+
+  const normalizedAppUrl = appUrl.trim()
+  if (normalizedAppUrl.length === 0) {
+    return targetUrl
+  }
+
+  try {
+    const authorizeUrl = new URL('/api/v1/auth/subapp/authorize', normalizedAppUrl)
+    authorizeUrl.searchParams.set('returnTo', targetUrl)
+    return authorizeUrl.toString()
+  } catch {
+    return targetUrl
+  }
+}
+
 export class CLS_RecordMarketplaceAppUse {
   private _payload!: Payload
   private _statusRequest: RequestStatus = CONFIG_RECORD_MARKETPLACE_APP_USE.RequestStatus.Pending
@@ -78,9 +127,12 @@ export class CLS_RecordMarketplaceAppUse {
   }
 
   private async _buildResponse(): Promise<void> {
+    const rawRedirectUrl = this._app!.web_url!
+    const redirectUrl = shouldUseAuthorizeBridge(rawRedirectUrl) ? buildProtectedRedirectUrl(rawRedirectUrl) : rawRedirectUrl
+
     this._statusRequest = CONFIG_RECORD_MARKETPLACE_APP_USE.RequestStatus.Completed
     this._requestResponse = {
-      data: { redirect_url: this._app!.web_url! }
+      data: { redirect_url: redirectUrl }
     }
   }
 }

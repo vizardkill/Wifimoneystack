@@ -3,6 +3,22 @@ import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { type GoogleCallbackState, type GoogleUserProfile } from '@lib/interfaces'
 import { AuthProviderType } from '@lib/interfaces'
 
+const normalizeAccessStatus = (value: string | undefined): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
+  if (value === 'APPROVED' || value === 'PENDING' || value === 'REJECTED' || value === 'REVOKED') {
+    return value
+  }
+
+  return 'NONE'
+}
+
+const normalizeRole = (value: string | undefined): 'USER' | 'ADMIN' | 'SUPERADMIN' => {
+  if (value === 'ADMIN' || value === 'SUPERADMIN') {
+    return value
+  }
+
+  return 'USER'
+}
+
 const encodeParams = (profile: GoogleUserProfile): string => {
   const params = new URLSearchParams({
     provider: 'google',
@@ -28,7 +44,8 @@ const parseState = (encodedState: string | null): GoogleCallbackState => {
     const decoded = Buffer.from(encodedState, 'base64url').toString('utf8')
     const parsed = JSON.parse(decoded) as GoogleCallbackState
     return {
-      mode: parsed.mode === 'signup' ? 'signup' : 'login'
+      mode: parsed.mode === 'signup' ? 'signup' : 'login',
+      returnTo: typeof parsed.returnTo === 'string' ? parsed.returnTo : undefined
     }
   } catch {
     return { mode: 'login' }
@@ -49,10 +66,13 @@ const isGoogleUserProfile = (value: unknown): value is GoogleUserProfile => {
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response> {
   const { authenticateUserAgnosticController, exchangeGoogleCodeController } = await import('@/core/auth/auth.server')
   const { commitSession, userSessionStorage } = await import('@/core/auth/cookie.server')
+  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
+  const { resolveSafeReturnTo, serializeSubappSessionCookie } = await import('@/core/auth/subapp-session.server')
 
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const state = parseState(url.searchParams.get('state'))
+  const safeReturnTo = resolveSafeReturnTo(request, state.returnTo)
 
   if (!code) {
     return redirect('/login?error=google_login_failed')
@@ -64,7 +84,11 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response>
   }
 
   if (state.mode === 'signup') {
-    return redirect(`/signup?${encodeParams(exchangeResult)}`)
+    const signupParams = new URLSearchParams(encodeParams(exchangeResult))
+    if (safeReturnTo) {
+      signupParams.set('returnTo', safeReturnTo)
+    }
+    return redirect(`/signup?${signupParams.toString()}`)
   }
 
   const authResult = await authenticateUserAgnosticController({
@@ -82,7 +106,11 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response>
   })
 
   if (authResult.error && authResult.message === 'Usuario no encontrado. Regístrate primero.') {
-    return redirect(`/signup?${encodeParams(exchangeResult)}`)
+    const signupParams = new URLSearchParams(encodeParams(exchangeResult))
+    if (safeReturnTo) {
+      signupParams.set('returnTo', safeReturnTo)
+    }
+    return redirect(`/signup?${signupParams.toString()}`)
   }
 
   if (authResult.error || !authResult.data?.token) {
@@ -90,15 +118,46 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response>
       error: 'google_login_failed',
       email: exchangeResult.email
     })
+    if (safeReturnTo) {
+      loginParams.set('returnTo', safeReturnTo)
+    }
     return redirect(`/login?${loginParams.toString()}`)
+  }
+
+  const userData = authResult.data.user
+  if (!userData?.id || !userData.email) {
+    return redirect('/login?error=google_login_failed')
+  }
+
+  const normalizedUser = {
+    id: userData.id,
+    email: userData.email,
+    first_name: userData.first_name ?? exchangeResult.given_name,
+    last_name: userData.last_name ?? exchangeResult.family_name,
+    role: normalizeRole(userData.role)
   }
 
   const session = await userSessionStorage.getSession(request.headers.get('Cookie'))
   session.set('token', authResult.data.token)
 
-  return redirect('/', {
-    headers: {
-      'Set-Cookie': await commitSession(session)
-    }
+  let accessStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' = 'APPROVED'
+
+  if (normalizedUser.role !== 'ADMIN' && normalizedUser.role !== 'SUPERADMIN') {
+    const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: normalizedUser.id }).main()
+    accessStatus = normalizeAccessStatus(accessResult.data?.access_status)
+  }
+
+  const subappCookie = await serializeSubappSessionCookie({
+    user: normalizedUser,
+    marketplaceAccessStatus: accessStatus
+  })
+
+  const redirectTo = safeReturnTo ?? '/'
+  const headers = new Headers()
+  headers.append('Set-Cookie', await commitSession(session))
+  headers.append('Set-Cookie', subappCookie)
+
+  return redirect(redirectTo, {
+    headers
   })
 }

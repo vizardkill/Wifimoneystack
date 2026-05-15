@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { type ActionFunctionArgs, data, type LoaderFunctionArgs, type MetaFunction, redirect } from 'react-router'
-import { Form, Link, useSubmit } from 'react-router'
+import { Form, Link, useLocation, useSubmit } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,10 +16,28 @@ import { LoginSchema } from '@lib/schemas/auth.schemas'
 
 import { type CONFIG_LOGIN_USER, type DataWithResponseInit } from '@types'
 
+const normalizeAccessStatus = (value: string | undefined): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
+  if (value === 'APPROVED' || value === 'PENDING' || value === 'REJECTED' || value === 'REVOKED') {
+    return value
+  }
+
+  return 'NONE'
+}
+
+const normalizeRole = (value: string | undefined): 'USER' | 'ADMIN' | 'SUPERADMIN' => {
+  if (value === 'ADMIN' || value === 'SUPERADMIN') {
+    return value
+  }
+
+  return 'USER'
+}
+
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response | null> {
   const { destroySession, getSession } = await import('@/core/auth/cookie.server')
   const { verifyUserToken } = await import('@/core/auth/verify_token.server')
+  const { getReturnToFromRequest } = await import('@/core/auth/subapp-session.server')
   const session = await getSession(request.headers.get('Cookie'))
+  const safeReturnTo = getReturnToFromRequest(request)
   const tokenValue: unknown = session.get('token')
   const token = typeof tokenValue === 'string' ? tokenValue : ''
 
@@ -27,7 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response 
     const user = verifyUserToken(token)
 
     if (user) {
-      return redirect('/')
+      return redirect(safeReturnTo ?? '/')
     }
 
     return redirect('/login', {
@@ -43,6 +61,8 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response 
 export async function action({ request }: ActionFunctionArgs): Promise<Response | DataWithResponseInit<CONFIG_LOGIN_USER.RequestResponse>> {
   const { loginController } = await import('@/core/auth/auth.server')
   const { userSessionStorage } = await import('@/core/auth/cookie.server')
+  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
+  const { getReturnToFromRequest, serializeSubappSessionCookie } = await import('@/core/auth/subapp-session.server')
 
   const validation = await validateRequest(request, LoginSchema)
   if (!validation.success) {
@@ -50,15 +70,44 @@ export async function action({ request }: ActionFunctionArgs): Promise<Response 
   }
 
   const response = await loginController(validation.data)
+  const safeReturnTo = getReturnToFromRequest(request)
 
   if (!response.error && response.data?.token) {
+    const userData = response.data.user
+    if (!userData?.id || !userData.email) {
+      return data(response)
+    }
+
+    const normalizedUser = {
+      id: userData.id,
+      email: userData.email,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      role: normalizeRole(userData.role)
+    }
+
     const session = await userSessionStorage.getSession(request.headers.get('Cookie'))
     session.set('token', response.data.token)
 
-    return redirect('/', {
-      headers: {
-        'Set-Cookie': await commitSession(session)
-      }
+    let accessStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' = 'APPROVED'
+
+    if (normalizedUser.role !== 'ADMIN' && normalizedUser.role !== 'SUPERADMIN') {
+      const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: normalizedUser.id }).main()
+      accessStatus = normalizeAccessStatus(accessResult.data?.access_status)
+    }
+
+    const subappCookie = await serializeSubappSessionCookie({
+      user: normalizedUser,
+      marketplaceAccessStatus: accessStatus
+    })
+
+    const redirectTo = safeReturnTo ?? '/'
+    const headers = new Headers()
+    headers.append('Set-Cookie', await commitSession(session))
+    headers.append('Set-Cookie', subappCookie)
+
+    return redirect(redirectTo, {
+      headers
     })
   }
 
@@ -70,6 +119,8 @@ export const meta: MetaFunction = () => {
 }
 
 export default function LoginPage(): JSX.Element {
+  const location = useLocation()
+  const returnTo = new URLSearchParams(location.search).get('returnTo')
   const {
     form,
     showPassword,
@@ -185,7 +236,10 @@ export default function LoginPage(): JSX.Element {
 
       <p className="text-center text-sm text-muted-foreground">
         ¿No tienes una cuenta?{' '}
-        <Link to="/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
+        <Link
+          to={returnTo ? `/signup?returnTo=${encodeURIComponent(returnTo)}` : '/signup'}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
           Regístrate aquí
         </Link>
       </p>

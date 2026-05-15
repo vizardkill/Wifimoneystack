@@ -24,6 +24,7 @@ type GoogleRegisterResponse = CONFIG_REGISTER_USER.RequestResponse
 export async function loader({ request }: LoaderFunctionArgs): Promise<DataWithResponseInit<SignupLoaderData> | Response> {
   const { destroySession, getSession } = await import('@/core/auth/cookie.server')
   const { verifyUserToken } = await import('@/core/auth/verify_token.server')
+  const { getReturnToFromRequest } = await import('@/core/auth/subapp-session.server')
   const session = await getSession(request.headers.get('Cookie'))
   const tokenValue: unknown = session.get('token')
   const token = typeof tokenValue === 'string' ? tokenValue : ''
@@ -56,7 +57,9 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<DataWithR
     access_token: url.searchParams.get('access_token')
   }
 
-  return data({ googleData })
+  const returnTo = getReturnToFromRequest(request)
+
+  return data({ googleData, returnTo })
 }
 
 /**
@@ -183,7 +186,7 @@ export default function SignUpPage(): JSX.Element {
               </Link>
             </Button>
             <Button variant="link" asChild>
-              <Link to="/login">Ir a Iniciar Sesión</Link>
+              <Link to={loaderData.returnTo ? `/login?returnTo=${encodeURIComponent(loaderData.returnTo)}` : '/login'}>Ir a Iniciar Sesión</Link>
             </Button>
           </CardContent>
         </Card>
@@ -211,7 +214,7 @@ export default function SignUpPage(): JSX.Element {
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">{successMessage}</p>
             <Button variant="link" asChild>
-              <Link to="/login">{successButtonLabel}</Link>
+              <Link to={loaderData.returnTo ? `/login?returnTo=${encodeURIComponent(loaderData.returnTo)}` : '/login'}>{successButtonLabel}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -426,7 +429,10 @@ export default function SignUpPage(): JSX.Element {
 
       <p className="text-center text-sm text-muted-foreground">
         ¿Ya tienes una cuenta?{' '}
-        <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+        <Link
+          to={loaderData.returnTo ? `/login?returnTo=${encodeURIComponent(loaderData.returnTo)}` : '/login'}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
           Inicia sesión aquí
         </Link>
       </p>

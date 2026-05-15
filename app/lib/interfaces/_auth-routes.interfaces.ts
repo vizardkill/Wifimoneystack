@@ -14,6 +14,7 @@ export interface GooglePrefillData {
 
 export interface SignupLoaderData {
   googleData: GooglePrefillData
+  returnTo?: string | null
 }
 
 export interface ResendVerificationResponse {
@@ -38,6 +39,7 @@ export interface ResetPasswordActionResponse {
 
 export interface GoogleCallbackState {
   mode?: 'login' | 'signup'
+  returnTo?: string
 }
 
 export interface GoogleRegisterActionResponse {

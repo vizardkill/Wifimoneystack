@@ -10,6 +10,7 @@ export default [
     route('sessions', './routes/api/v1/auth/sessions.ts'),
     route('sessions/verify', './routes/api/v1/auth/sessions.verify.ts'),
     route('sessions/resend', './routes/api/v1/auth/sessions.resend.ts'),
+    route('subapp/authorize', './routes/api/v1/auth/subapp.authorize.ts'),
     route('oauth/google', './routes/api/v1/auth/oauth.google.ts'),
     route('oauth/google/callback', './routes/api/v1/auth/oauth.google.callback.ts'),
     route('oauth/google/register', './routes/api/v1/auth/oauth.google.register.ts')

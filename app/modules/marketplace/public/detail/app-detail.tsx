@@ -238,15 +238,13 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
             <p className="text-xs leading-relaxed text-[var(--color-mp-muted)]">{primaryActionHelperText}</p>
 
-            {app.access_mode === 'WEB_LINK' && app.web_url ? (
-              <a
-                href={app.web_url}
-                target="_blank"
-                rel="noopener noreferrer"
+            {app.access_mode === 'WEB_LINK' ? (
+              <Link
+                to={`/marketplace/apps/${app.id}/use`}
                 className="block text-center text-sm font-medium text-[var(--color-mp-charcoal)] underline underline-offset-2 transition-colors hover:text-[var(--color-mp-green)]"
               >
                 {secondaryActionLabel}
-              </a>
+              </Link>
             ) : (
               <Link
                 to={`/marketplace/apps/${app.id}/download`}
