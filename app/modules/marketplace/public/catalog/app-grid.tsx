@@ -6,19 +6,22 @@ import { AppCard } from './app-card'
 
 interface App {
   id: string
+  slug: string
   name: string
   summary?: string | null
   icon_url?: string | null
   access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
+  screenshot_count?: number
 }
 
 interface AppGridProps {
   apps: App[]
   emptyMessage?: string
   emptySearch?: string
+  compact?: boolean
 }
 
-export function AppGrid({ apps, emptyMessage, emptySearch }: AppGridProps): JSX.Element {
+export function AppGrid({ apps, emptyMessage, emptySearch, compact = false }: AppGridProps): JSX.Element {
   if (apps.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
@@ -32,9 +35,9 @@ export function AppGrid({ apps, emptyMessage, emptySearch }: AppGridProps): JSX.
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={`grid grid-cols-1 gap-4 ${compact ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
       {apps.map((app) => (
-        <AppCard key={app.id} app={app} />
+        <AppCard key={app.id} app={app} compact={compact} />
       ))}
     </div>
   )
