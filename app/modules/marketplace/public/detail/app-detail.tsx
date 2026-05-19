@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useMemo, useState } from 'react'
 
-import { ArrowLeft, Download, Globe, ImageIcon, Play, Star } from 'lucide-react'
+import { ArrowLeft, Download, Globe, ImageIcon, Play } from 'lucide-react'
 import { Link } from 'react-router'
 
 interface AppMedia {
@@ -193,13 +193,10 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
               <p className="text-sm leading-6 text-[var(--color-mp-charcoal)]">✓ {compatibilityLabel}</p>
             </div>
 
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Calificación</p>
-              <p className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-mp-charcoal)]">
-                <Star className="h-4 w-4 fill-current text-[var(--color-mp-charcoal)]" />
-                4.8 (demo)
-              </p>
-            </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Calificacion</p>
+                <p className="text-sm font-medium text-[var(--color-mp-charcoal)]">Sin calificaciones publicas aun</p>
+              </div>
 
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Desarrollador</p>
@@ -255,7 +252,6 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
             )}
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-[var(--color-mp-muted)]">Contiene textos y recursos de demostración para pruebas del marketplace.</p>
         </aside>
 
         <section className="space-y-6">

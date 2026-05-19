@@ -1,4 +1,4 @@
--- Seed: Demo users and marketplace data
+-- Seed: Demo users and access request states
 BEGIN;
 
 -- -----------------------------------------------------------------------------
@@ -210,9 +210,13 @@ DO UPDATE SET
   "revoked_at" = EXCLUDED."revoked_at",
   "updated_at" = NOW();
 
+/*
 -- -----------------------------------------------------------------------------
 -- Marketplace apps and related assets
 -- -----------------------------------------------------------------------------
+-- Disabled on purpose.
+-- The canonical marketplace catalog now lives in 004_seed_canonical_marketplace_apps.sql
+-- so this demo seed does not reinsert mock apps, media, artifacts or events.
 INSERT INTO "marketplace_apps" (
   "id",
   "slug",
@@ -794,5 +798,6 @@ DO UPDATE SET
   "reason" = EXCLUDED."reason",
   "metadata" = EXCLUDED."metadata",
   "created_at" = EXCLUDED."created_at";
+*/
 
 COMMIT;
