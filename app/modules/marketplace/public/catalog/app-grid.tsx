@@ -25,9 +25,9 @@ export function AppGrid({ apps, emptyMessage, emptySearch, compact = false }: Ap
   if (apps.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-        <Package className="h-12 w-12 text-gray-300" />
-        <h3 className="font-semibold text-gray-700">Sin aplicaciones</h3>
-        <p className="text-sm text-muted-foreground">
+        <Package className="h-12 w-12 text-mp-home-muted/60" />
+        <h3 className="font-semibold text-mp-home-text">Sin aplicaciones</h3>
+        <p className="text-sm text-mp-home-muted">
           {emptySearch ? `No hay resultados para "${emptySearch}"` : (emptyMessage ?? 'Aún no hay aplicaciones publicadas en el catálogo.')}
         </p>
       </div>

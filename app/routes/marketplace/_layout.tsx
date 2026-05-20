@@ -42,20 +42,20 @@ export default function MarketplaceLayout(): JSX.Element {
   const { user } = useLoaderData<typeof loader>()
 
   return (
-    <div className="min-h-screen bg-[var(--color-mp-ivory)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#112032_0%,#050b14_55%)] text-mp-home-text">
       {/* Top Nav */}
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-[var(--color-mp-charcoal)]">
+      <header className="sticky top-0 z-50 border-b border-mp-home-border bg-mp-home-bg/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-          <Link to="/marketplace" className="flex items-center gap-2 text-white">
-            <ShoppingBag className="h-5 w-5 text-[var(--color-mp-neon)]" />
+          <Link to="/marketplace" className="flex items-center gap-2 text-mp-home-text">
+            <ShoppingBag className="h-5 w-5 text-mp-home-accent" />
             <span className="font-heading font-bold text-lg">Marketplace</span>
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400 hidden sm:block">{user.email}</span>
+            <span className="hidden text-sm text-mp-home-muted sm:block">{user.email}</span>
             <Form method="post" action="/api/v1/auth/sessions">
               <button
                 type="submit"
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-mp-home-muted transition-colors hover:bg-mp-home-surface hover:text-mp-home-text"
               >
                 <LogOut className="h-4 w-4" />
                 Salir

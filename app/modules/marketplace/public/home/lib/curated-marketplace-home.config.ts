@@ -3,10 +3,10 @@ import type { CuratedStackDefinition, GoalRouteDefinition, MarketplaceHeroDefini
 export const MARKETPLACE_HOME_HERO: MarketplaceHeroDefinition = {
   badge: 'Marketplace operativo para ecommerce real',
   title: 'Elige un objetivo y activa la app correcta en minutos.',
-  subtitle: 'Selecciona una ruta, abre un stack recomendado y avanza sin salir del marketplace.',
+  subtitle: 'Filtra por objetivo, explora el catalogo completo y avanza sin salir del marketplace.',
   supporting_points: [
     'Rutas claras para vender mas, lanzar rapido, validar productos y ordenar operacion.',
-    'Stacks recomendados por resultado de negocio.',
+    'Catalogo completo con filtros por resultado de negocio.',
     'Catalogo completo disponible cuando quieras explorar.'
   ]
 }
@@ -63,7 +63,7 @@ export const GOAL_ROUTE_DEFINITIONS: GoalRouteDefinition[] = [
     id: 'sell_more',
     label: 'Vender mas',
     headline: 'Optimiza conversion y cierre comercial',
-    supporting_copy: 'Activa un stack para atraer, convertir y medir con foco en ingreso.',
+    supporting_copy: 'Activa apps para atraer, convertir y medir con foco en ingreso.',
     stack_ids: ['sell-more-conversion-stack'],
     sort_order: 1,
     fallback_goal_ids: ['launch_faster', 'order_operations']

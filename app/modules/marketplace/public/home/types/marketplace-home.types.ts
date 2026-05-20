@@ -40,12 +40,11 @@ export interface CuratedStackDefinition {
 export interface MarketplaceHomeDiscoveryState {
   goal_id: MarketplaceGoalId | null
   search_query: string
-  stack_focus_id: string | null
 }
 
 export interface GoalRouteViewModel extends GoalRouteDefinition {
   is_active: boolean
-  stack_count: number
+  app_count: number
   to: string
 }
 
@@ -67,8 +66,6 @@ export interface MarketplaceHomeViewModel {
   hero: MarketplaceHeroDefinition
   discovery: MarketplaceHomeDiscoveryState
   goals: GoalRouteViewModel[]
-  visible_stacks: CuratedStackViewModel[]
-  focused_stack: CuratedStackViewModel | null
   catalog_apps: MarketplacePublishedApp[]
   full_catalog_apps: MarketplacePublishedApp[]
   recovery_actions: MarketplaceRecoveryAction[]

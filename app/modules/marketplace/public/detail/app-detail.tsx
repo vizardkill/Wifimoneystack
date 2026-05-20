@@ -141,8 +141,8 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const canRunPrimaryAction = app.access_mode === 'WEB_LINK' ? Boolean(app.web_url) : app.has_active_artifact
   const primaryActionClass =
     app.access_mode === 'WEB_LINK'
-      ? 'bg-[var(--color-mp-green)] text-[var(--color-mp-charcoal)] hover:brightness-95'
-      : 'bg-[var(--color-mp-charcoal)] text-[var(--color-mp-ivory)] hover:opacity-90'
+      ? 'bg-mp-home-accent text-[#042118] hover:bg-mp-home-accent-strong'
+      : 'bg-mp-home-surface-strong text-mp-home-text hover:bg-mp-home-surface'
   const accessModeLabel = app.access_mode === 'WEB_LINK' ? 'Aplicación web' : 'Extensión descargable'
   const pricingLabel = app.access_mode === 'WEB_LINK' ? 'Uso incluido' : 'Descarga incluida'
   const compatibilityLabel = app.access_mode === 'WEB_LINK' ? 'Acceso inmediato desde navegador' : 'Instalación manual mediante paquete o ZIP'
@@ -159,7 +159,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
       <div>
         <Link
           to="/marketplace"
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-mp-muted)] transition-colors hover:text-[var(--color-mp-green)]"
+          className="inline-flex items-center gap-1.5 text-sm text-mp-home-muted transition-colors hover:text-mp-home-accent"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al catálogo
@@ -167,46 +167,46 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-2xl border border-[var(--color-mp-border)] bg-[var(--color-mp-ivory)] p-6 shadow-sm xl:sticky xl:top-20">
+        <aside className="h-fit rounded-2xl border border-mp-home-border bg-mp-home-surface p-6 shadow-[0_20px_40px_rgba(3,9,20,0.38)] xl:sticky xl:top-20">
           <div className="flex items-center gap-3">
             {iconUrl ? (
               <img src={iconUrl} alt={`${app.name} icon`} className="block h-14 w-14 rounded-xl object-cover" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--color-mp-surface)]/10">
-                <Globe className="h-7 w-7 text-[var(--color-mp-muted)]" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-mp-home-surface-strong">
+                <Globe className="h-7 w-7 text-mp-home-muted" />
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="truncate text-[1.15rem] font-semibold leading-tight text-[var(--color-mp-charcoal)] md:text-xl">{app.name}</h1>
-              <p className="text-sm text-[var(--color-mp-muted)]">{accessModeLabel}</p>
+              <h1 className="truncate text-[1.15rem] font-semibold leading-tight text-mp-home-text md:text-xl">{app.name}</h1>
+              <p className="text-sm text-mp-home-muted">{accessModeLabel}</p>
             </div>
           </div>
 
-          <div className="mt-6 space-y-5 border-t border-[var(--color-mp-border)] pt-5">
+          <div className="mt-6 space-y-5 border-t border-mp-home-border pt-5">
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Precios</p>
-              <p className="text-sm font-medium text-[var(--color-mp-charcoal)]">{pricingLabel}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Precios</p>
+              <p className="text-sm font-medium text-mp-home-text">{pricingLabel}</p>
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Formato de acceso</p>
-              <p className="text-sm leading-6 text-[var(--color-mp-charcoal)]">✓ {compatibilityLabel}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Formato de acceso</p>
+              <p className="text-sm leading-6 text-mp-home-text">✓ {compatibilityLabel}</p>
             </div>
 
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Calificacion</p>
-                <p className="text-sm font-medium text-[var(--color-mp-charcoal)]">Sin calificaciones publicas aun</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Calificacion</p>
+                <p className="text-sm font-medium text-mp-home-text">Sin calificaciones publicas aun</p>
               </div>
 
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Desarrollador</p>
-              <p className="text-sm font-medium text-[var(--color-mp-charcoal)]">{storefront?.developer_name ?? 'Marketplace Ecommerce Team'}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Desarrollador</p>
+              <p className="text-sm font-medium text-mp-home-text">{storefront?.developer_name ?? 'Marketplace Ecommerce Team'}</p>
               {storefront?.developer_website ? (
                 <a
                   href={storefront.developer_website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[var(--color-mp-green)] underline underline-offset-2"
+                  className="text-sm text-mp-home-accent underline underline-offset-2"
                 >
                   {storefront.developer_website}
                 </a>
@@ -227,25 +227,25 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
               <button
                 type="button"
                 disabled
-                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-[var(--color-mp-muted)]/20 px-5 py-3 text-sm font-semibold text-[var(--color-mp-muted)]"
+                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full border border-mp-home-border bg-mp-home-surface-strong px-5 py-3 text-sm font-semibold text-mp-home-muted"
               >
                 Disponible próximamente
               </button>
             )}
 
-            <p className="text-xs leading-relaxed text-[var(--color-mp-muted)]">{primaryActionHelperText}</p>
+            <p className="text-xs leading-relaxed text-mp-home-muted">{primaryActionHelperText}</p>
 
             {app.access_mode === 'WEB_LINK' ? (
               <Link
                 to={`/marketplace/apps/${app.id}/use`}
-                className="block text-center text-sm font-medium text-[var(--color-mp-charcoal)] underline underline-offset-2 transition-colors hover:text-[var(--color-mp-green)]"
+                className="block text-center text-sm font-medium text-mp-home-text underline underline-offset-2 transition-colors hover:text-mp-home-accent"
               >
                 {secondaryActionLabel}
               </Link>
             ) : (
               <Link
                 to={`/marketplace/apps/${app.id}/download`}
-                className="block text-center text-sm font-medium text-[var(--color-mp-charcoal)] underline underline-offset-2 transition-colors hover:text-[var(--color-mp-green)]"
+                className="block text-center text-sm font-medium text-mp-home-text underline underline-offset-2 transition-colors hover:text-mp-home-accent"
               >
                 {secondaryActionLabel}
               </Link>
@@ -256,8 +256,8 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
         <section className="space-y-6">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_168px]">
-            <div className="relative overflow-hidden rounded-2xl border border-[var(--color-mp-border)] bg-[var(--color-mp-charcoal)] shadow-sm">
-              <div className="aspect-[16/10] w-full sm:aspect-[16/9]">
+            <div className="relative overflow-hidden rounded-2xl border border-mp-home-border bg-mp-home-surface shadow-[0_20px_36px_rgba(3,9,20,0.4)]">
+              <div className="aspect-16/10 w-full sm:aspect-video">
                 {activeMedia ? (
                   activeMedia.type === 'VIDEO' && activeVideoEmbed ? (
                     <iframe
@@ -272,9 +272,9 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                       href={activeMedia.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex h-full w-full items-center justify-center bg-[var(--color-mp-charcoal)]"
+                      className="group flex h-full w-full items-center justify-center bg-mp-home-surface"
                     >
-                      <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-mp-ivory)] px-4 py-2 font-heading text-sm font-semibold text-[var(--color-mp-charcoal)] transition-transform group-hover:scale-105">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-mp-home-text px-4 py-2 font-heading text-sm font-semibold text-mp-home-bg transition-transform group-hover:scale-105">
                         <Play className="h-4 w-4" />
                         Ver video
                       </span>
@@ -283,14 +283,14 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                     <img src={activeMedia.url} alt={activeMedia.alt} className="block h-full w-full object-cover object-top" />
                   )
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[var(--color-mp-surface)]/10 text-[var(--color-mp-muted)]">
+                  <div className="flex h-full w-full items-center justify-center bg-mp-home-surface-strong text-mp-home-muted">
                     <ImageIcon className="h-10 w-10" />
                   </div>
                 )}
               </div>
 
               {activeMedia !== null && activeMedia.type === 'VIDEO' && (
-                <div className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-[var(--color-mp-charcoal)] px-3 py-1 font-heading text-xs font-semibold text-[var(--color-mp-ivory)]">
+                <div className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-mp-home-surface-strong px-3 py-1 font-heading text-xs font-semibold text-mp-home-text">
                   <Play className="h-3.5 w-3.5" />
                   Video destacado
                 </div>
@@ -309,8 +309,8 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                     onClick={() => setActiveMediaId(media.id)}
                     className={`relative overflow-hidden rounded-xl border transition-all ${
                       isActive
-                        ? 'border-[var(--color-mp-green)] ring-2 ring-[var(--color-mp-green)]/25'
-                        : 'border-[var(--color-mp-border)] hover:border-[var(--color-mp-green)]'
+                        ? 'border-mp-home-accent ring-2 ring-mp-home-accent/25'
+                        : 'border-mp-home-border hover:border-mp-home-accent'
                     }`}
                     aria-label={`Vista previa ${media.type === 'VIDEO' ? 'de video' : 'de captura'}`}
                   >
@@ -318,16 +318,16 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                       youtubeId ? (
                         <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={media.alt} className="aspect-video w-full object-cover" />
                       ) : (
-                        <div className="flex aspect-video w-full items-center justify-center bg-[var(--color-mp-charcoal)] text-[var(--color-mp-ivory)]">
+                        <div className="flex aspect-video w-full items-center justify-center bg-mp-home-surface text-mp-home-text">
                           <Play className="h-5 w-5" />
                         </div>
                       )
                     ) : (
-                      <img src={media.url} alt={media.alt} className="block aspect-[4/3] w-full object-cover object-top xl:aspect-video" />
+                      <img src={media.url} alt={media.alt} className="block aspect-4/3 w-full object-cover object-top xl:aspect-video" />
                     )}
 
                     {media.type === 'VIDEO' && (
-                      <span className="absolute bottom-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-mp-charcoal)] text-[var(--color-mp-ivory)]">
+                      <span className="absolute bottom-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-mp-home-surface text-mp-home-text">
                         <Play className="h-3.5 w-3.5" />
                       </span>
                     )}
@@ -338,15 +338,15 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
           </div>
 
           <div className="space-y-4">
-            {app.summary && <h2 className="max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-[var(--color-mp-charcoal)] md:text-[2rem]">{app.summary}</h2>}
+            {app.summary && <h2 className="max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-mp-home-text md:text-[2rem]">{app.summary}</h2>}
 
-            {app.description && <p className="max-w-4xl whitespace-pre-wrap text-base leading-8 text-[var(--color-mp-muted)] md:text-[17px]">{app.description}</p>}
+            {app.description && <p className="max-w-4xl whitespace-pre-wrap text-base leading-8 text-mp-home-muted md:text-[17px]">{app.description}</p>}
           </div>
 
           {highlightItems.length > 0 && (
             <section className="space-y-3">
-              <h3 className="text-lg font-semibold text-[var(--color-mp-charcoal)] md:text-xl">Beneficios principales</h3>
-              <ul className="space-y-2 pl-6 text-[var(--color-mp-muted)]">
+              <h3 className="text-lg font-semibold text-mp-home-text md:text-xl">Beneficios principales</h3>
+              <ul className="space-y-2 pl-6 text-mp-home-muted">
                 {highlightItems.map((item) => (
                   <li key={item} className="list-disc text-base leading-7 md:text-[17px]">
                     {item}
@@ -357,40 +357,40 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
           )}
 
           {app.instructions && (
-            <section className="rounded-2xl border border-[var(--color-mp-border)] bg-[var(--color-mp-ivory)] p-5">
-              <h3 className="text-lg font-semibold text-[var(--color-mp-charcoal)] md:text-xl">Cómo funciona</h3>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-mp-muted)] md:text-[15px]">{app.instructions}</p>
+            <section className="rounded-2xl border border-mp-home-border bg-mp-home-surface p-5">
+              <h3 className="text-lg font-semibold text-mp-home-text md:text-xl">Cómo funciona</h3>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-mp-home-muted md:text-[15px]">{app.instructions}</p>
             </section>
           )}
 
-          <section className="rounded-2xl border border-[var(--color-mp-border)] bg-[var(--color-mp-ivory)] p-5">
-            <h3 className="text-lg font-semibold text-[var(--color-mp-charcoal)]">Información adicional</h3>
+          <section className="rounded-2xl border border-mp-home-border bg-mp-home-surface p-5">
+            <h3 className="text-lg font-semibold text-mp-home-text">Información adicional</h3>
             <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Idiomas</dt>
-                <dd className="mt-1 text-sm leading-6 text-[var(--color-mp-charcoal)] md:text-[15px]">{supportedLanguagesText}</dd>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Idiomas</dt>
+                <dd className="mt-1 text-sm leading-6 text-mp-home-text md:text-[15px]">{supportedLanguagesText}</dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Compatibilidad</dt>
-                <dd className="mt-1 text-sm leading-6 text-[var(--color-mp-charcoal)] md:text-[15px]">{compatibilityLabel}</dd>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Compatibilidad</dt>
+                <dd className="mt-1 text-sm leading-6 text-mp-home-text md:text-[15px]">{compatibilityLabel}</dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Entrega</dt>
-                <dd className="mt-1 text-sm leading-6 text-[var(--color-mp-charcoal)] md:text-[15px]">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Entrega</dt>
+                <dd className="mt-1 text-sm leading-6 text-mp-home-text md:text-[15px]">
                   {app.access_mode === 'WEB_LINK' ? 'Acceso en navegador' : 'Paquete descargable para instalación manual'}
                 </dd>
               </div>
               {storefront && (storefront.support_email || storefront.support_url) ? (
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--color-mp-muted)]">Soporte</dt>
-                  <dd className="mt-1 space-y-1 text-sm text-[var(--color-mp-charcoal)] md:text-[15px]">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-mp-home-muted">Soporte</dt>
+                  <dd className="mt-1 space-y-1 text-sm text-mp-home-text md:text-[15px]">
                     {storefront.support_email ? <p>{storefront.support_email}</p> : null}
                     {storefront.support_url ? (
                       <a
                         href={storefront.support_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-[var(--color-mp-green)] underline underline-offset-2"
+                        className="text-sm text-mp-home-accent underline underline-offset-2"
                       >
                         {storefront.support_url}
                       </a>
