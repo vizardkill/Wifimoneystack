@@ -1,6 +1,7 @@
 /**
  * Tipos agnósticos para el sistema de envío de emails
  */
+/// <reference types="node" />
 
 export enum EmailProvider {
   SMTP = 'SMTP',

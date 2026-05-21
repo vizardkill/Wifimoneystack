@@ -41,7 +41,7 @@ export const CURATED_HOME_STACKS: CuratedStackDefinition[] = [
     context_statement: 'Ideal para nuevos SKUs o hipótesis de oferta que aun no están validadas.',
     next_step_label: 'Abrir circuito de validacion',
     goal_ids: ['validate_products'],
-    app_slugs: ['wifi-tiktoker-scanner', 'wifi-add-report', 'shopify-store-cloner'],
+    app_slugs: ['aliexpress-scanner', 'wifi-tiktoker-scanner', 'wifi-add-report', 'shopify-store-cloner'],
     supporting_signals: ['Iteraciones cortas', 'Señales de adopcion accionables', 'Aprendizaje continuo por experimento'],
     sort_order: 3
   },

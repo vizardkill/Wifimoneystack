@@ -16,6 +16,13 @@ export default [
     route('oauth/google/register', './routes/api/v1/auth/oauth.google.register.ts')
   ]),
 
+  // ── API: Meta (conexion + overview + presets) ────────────────────────────
+  ...prefix('api/v1/meta', [
+    route('connection', './routes/api/v1/meta/connection.ts'),
+    route('overview', './routes/api/v1/meta/overview.ts'),
+    route('presets', './routes/api/v1/meta/presets.ts')
+  ]),
+
   // ── Auth (login, signup, forgot/reset password, verificación) ─────────────
   layout('./routes/auth/_layout.tsx', [
     route('login', './routes/auth/login.tsx'),

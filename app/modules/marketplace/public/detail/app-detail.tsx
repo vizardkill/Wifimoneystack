@@ -100,6 +100,56 @@ function toListItems(text: string | null | undefined): string[] {
     .slice(0, 4)
 }
 
+function buildUsageSteps(text: string | null | undefined, accessMode: MarketplaceAppDetail['access_mode']): string[] {
+  if (!text) {
+    return accessMode === 'PACKAGE_DOWNLOAD'
+      ? [
+          'Descarga el ZIP firmado desde el boton principal.',
+          'Descomprime el archivo en tu equipo.',
+          'Abre chrome://extensions y activa Modo desarrollador.',
+          'Haz clic en Cargar descomprimida y selecciona la carpeta extraida.'
+        ]
+      : [
+          'Abre la app con el boton principal.',
+          'Completa la configuracion inicial que te solicite la herramienta.',
+          'Ejecuta tu primer flujo y revisa el resultado en pantalla.'
+        ]
+  }
+
+  const lineBased = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[-*•]\s*/, '').replace(/^\d+[\).:-]?\s*/, '').trim())
+    .filter((line) => line.length > 0)
+
+  const sentenceBased =
+    lineBased.length <= 1
+      ? text
+          .split(/(?<=[.!?])\s+/)
+          .map((sentence) => sentence.replace(/^[-*•]\s*/, '').replace(/^\d+[\).:-]?\s*/, '').trim())
+          .map((sentence) => sentence.replace(/[.!?]+$/, '').trim())
+          .filter((sentence) => sentence.length > 0)
+      : []
+
+  const normalized = (lineBased.length > 1 ? lineBased : sentenceBased).slice(0, 4)
+
+  if (normalized.length >= 2) {
+    return normalized
+  }
+
+  return accessMode === 'PACKAGE_DOWNLOAD'
+    ? [
+        'Descarga el ZIP firmado desde el boton principal.',
+        'Descomprime el archivo en tu equipo.',
+        'Abre chrome://extensions y activa Modo desarrollador.',
+        'Haz clic en Cargar descomprimida y selecciona la carpeta extraida.'
+      ]
+    : [
+        'Abre la app con el boton principal.',
+        'Completa la configuracion inicial que te solicite la herramienta.',
+        'Ejecuta tu primer flujo y revisa el resultado en pantalla.'
+      ]
+}
+
 export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const storefront = app.presentation_mode === 'STOREFRONT' ? (app.storefront ?? null) : null
 
@@ -137,7 +187,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const activeVideoEmbed = activeMedia !== null && activeMedia.type === 'VIDEO' ? toYoutubeEmbedUrl(activeMedia.url) : null
 
   const primaryActionHref = app.access_mode === 'WEB_LINK' ? `/marketplace/apps/${app.id}/use` : `/marketplace/apps/${app.id}/download`
-  const primaryActionLabel = app.access_mode === 'WEB_LINK' ? 'Usar' : 'Descargar'
+  const primaryActionLabel = app.access_mode === 'WEB_LINK' ? 'Abrir app' : 'Descargar ZIP'
   const canRunPrimaryAction = app.access_mode === 'WEB_LINK' ? Boolean(app.web_url) : app.has_active_artifact
   const primaryActionClass =
     app.access_mode === 'WEB_LINK'
@@ -146,13 +196,15 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const accessModeLabel = app.access_mode === 'WEB_LINK' ? 'Aplicación web' : 'Extensión descargable'
   const pricingLabel = app.access_mode === 'WEB_LINK' ? 'Uso incluido' : 'Descarga incluida'
   const compatibilityLabel = app.access_mode === 'WEB_LINK' ? 'Acceso inmediato desde navegador' : 'Instalación manual mediante paquete o ZIP'
-  const secondaryActionLabel = app.access_mode === 'WEB_LINK' ? 'Abrir sitio web' : 'Ver descarga disponible'
+  const secondaryActionLabel = app.access_mode === 'WEB_LINK' ? 'Abrir en una nueva pestaña' : 'Ver descarga disponible'
   const primaryActionHelperText =
     app.access_mode === 'WEB_LINK'
-      ? 'Abre la app en una nueva pestaña y registra el uso dentro del marketplace.'
-      : 'Descarga el paquete de instalación para configurarlo fuera del marketplace.'
+      ? 'Se abre en una nueva pestaña y el uso queda registrado automaticamente dentro del marketplace.'
+      : 'Descarga el paquete e instala la extension en Chrome. La primera configuracion toma entre 2 y 4 minutos.'
+  const onboardingHint = app.access_mode === 'WEB_LINK' ? 'Empiezas en menos de 2 minutos.' : 'Tu primera instalacion toma entre 2 y 4 minutos.'
 
   const highlightItems = toListItems(app.instructions)
+  const usageSteps = useMemo(() => buildUsageSteps(app.instructions, app.access_mode), [app.access_mode, app.instructions])
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -355,6 +407,18 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
               </ul>
             </section>
           )}
+
+          <section className="rounded-2xl border border-mp-home-border bg-mp-home-surface p-5">
+            <h3 className="text-lg font-semibold text-mp-home-text md:text-xl">Primeros pasos</h3>
+            <p className="mt-2 text-sm text-mp-home-muted md:text-[15px]">{onboardingHint}</p>
+            <ol className="mt-3 list-decimal space-y-2 pl-6 text-mp-home-muted">
+              {usageSteps.map((step) => (
+                <li key={step} className="text-sm leading-7 md:text-[15px]">
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </section>
 
           {app.instructions && (
             <section className="rounded-2xl border border-mp-home-border bg-mp-home-surface p-5">
