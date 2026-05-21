@@ -350,6 +350,22 @@ VALUES
     (SELECT "id" FROM seed_actor),
     NOW(),
     NOW()
+  ),
+  (
+    'df3572cf-aa88-4dbe-b7ae-e88ab3872bbb',
+    'dropi-ops-analyzer',
+    'Dropi Ops Analyzer',
+    'Analiza pedidos Dropi y detecta alertas logísticas antes de perder margen.',
+    'Subapp operativa para procesar exportes de Dropi en XLSX o CSV y generar métricas de entregas, tránsito, recaudo, flete promedio y estados críticos.',
+    'Carga tu reporte de Dropi, revisa el panel de indicadores y prioriza las alertas críticas para corregir operación y recaudo más rápido.',
+    'WEB_LINK',
+    'ACTIVE',
+    'https://dropi-ops-analyzer.wifimoneystack.com',
+    NOW(),
+    (SELECT "id" FROM seed_actor),
+    (SELECT "id" FROM seed_actor),
+    NOW(),
+    NOW()
   )
 ON CONFLICT ("slug")
 DO UPDATE SET

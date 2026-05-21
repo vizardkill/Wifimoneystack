@@ -52,7 +52,7 @@ export const CURATED_HOME_STACKS: CuratedStackDefinition[] = [
     context_statement: 'Ideal para equipos que crecieron rapido y necesitan consistencia operativa.',
     next_step_label: 'Estabilizar operación',
     goal_ids: ['order_operations'],
-    app_slugs: ['dashboard-logistico', 'wifi-add-report', 'wifi-numbers'],
+    app_slugs: ['dropi-ops-analyzer', 'dashboard-logistico', 'wifi-add-report', 'wifi-numbers'],
     supporting_signals: ['Prioridad por cuellos de botella', 'Ritmo operativo diario', 'Visibilidad para decisiones rapidas'],
     sort_order: 4
   }
