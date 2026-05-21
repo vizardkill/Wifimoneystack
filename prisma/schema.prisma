@@ -40,10 +40,37 @@ model User {
   verification_tokens   EmailVerificationToken[]
   password_reset_tokens PasswordResetToken[]
   auth_providers        UserAuthProvider[]
+  meta_connection       UserMetaConnection?
 
   @@index([email])
   @@index([role, created_at])
   @@map("users")
+}
+
+/// Conexión de Meta Ads configurada por cada usuario para dashboards self-service.
+model UserMetaConnection {
+  id                     String   @id @default(uuid())
+  user_id                String   @unique
+  token_label            String?  @db.VarChar(80)
+  encrypted_access_token String
+  ad_account_id          String   @db.VarChar(64)
+  business_id            String?  @db.VarChar(64)
+  status                 String   @default("ACTIVE") @db.VarChar(32)
+  account_name           String?  @db.VarChar(120)
+  account_currency       String?  @db.VarChar(16)
+  timezone_name          String?  @db.VarChar(80)
+  timezone_offset_hours  Int?
+  last_validated_at      DateTime?
+  last_error             String?
+  metadata               Json?
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([ad_account_id])
+  @@map("user_meta_connections")
 }
 
 /// Proveedor de autenticación del usuario (JWT, Google, etc.)

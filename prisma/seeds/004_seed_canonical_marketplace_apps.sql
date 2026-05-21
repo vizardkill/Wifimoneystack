@@ -318,6 +318,22 @@ VALUES
     (SELECT "id" FROM seed_actor),
     NOW(),
     NOW()
+  ),
+  (
+    'e3b6e66f-c156-4103-a492-06c9ded9b72d',
+    'facebook-insights',
+    'Facebook Insights',
+    'Conecta Meta Ads y ejecuta presets operativos para optimizar campanas.',
+    'Subapp standalone para conectar credenciales del usuario y ejecutar analisis accionables de performance, fuga de presupuesto y fatiga creativa.',
+    'Conecta tu cuenta de Meta Ads, selecciona rango de fechas y ejecuta cualquiera de los presets para obtener recomendaciones inmediatas.',
+    'WEB_LINK',
+    'ACTIVE',
+    'https://facebook-insights.wifimoneystack.com',
+    NOW(),
+    (SELECT "id" FROM seed_actor),
+    (SELECT "id" FROM seed_actor),
+    NOW(),
+    NOW()
   )
 ON CONFLICT ("slug")
 DO UPDATE SET

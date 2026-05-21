@@ -19,7 +19,7 @@ export const CURATED_HOME_STACKS: CuratedStackDefinition[] = [
     context_statement: 'Ideal para tiendas con trafico activo que necesitan mejorar cierre semanal.',
     next_step_label: 'Abrir flujo de conversion',
     goal_ids: ['sell_more'],
-    app_slugs: ['shopify-store-cloner', 'wifi-add-report', 'wifi-numbers'],
+    app_slugs: ['shopify-store-cloner', 'wifi-add-report', 'wifi-numbers', 'winner-adds', 'facebook-insights'],
     supporting_signals: ['CTA claras en cada paso', 'Medicion simple por canal', 'Activacion en menos de 30 minutos'],
     sort_order: 1
   },

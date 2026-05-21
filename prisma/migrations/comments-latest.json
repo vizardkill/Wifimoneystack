@@ -57,6 +57,94 @@
       }
     ]
   },
+  "user_meta_connections": {
+    "table": {
+      "tableName": "user_meta_connections",
+      "comment": "Conexión de Meta Ads configurada por cada usuario para dashboards self-service."
+    },
+    "columns": [
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "token_label",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "encrypted_access_token",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "ad_account_id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "business_id",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "status",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "account_name",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "account_currency",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "timezone_name",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "timezone_offset_hours",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "last_validated_at",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "last_error",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "metadata",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "user_meta_connections",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
   "user_auth_providers": {
     "table": {
       "tableName": "user_auth_providers",
