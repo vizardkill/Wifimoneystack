@@ -48,7 +48,7 @@ export default function MarketplaceLayout(): JSX.Element {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
           <Link to="/marketplace" className="flex items-center gap-2 text-mp-home-text">
             <ShoppingBag className="h-5 w-5 text-mp-home-accent" />
-            <span className="font-heading font-bold text-lg">Marketplace</span>
+            <span className="font-heading font-bold text-lg text-mp-home-accent-strong">WiFiMoneyStack</span>
           </Link>
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-mp-home-muted sm:block">{user.email}</span>

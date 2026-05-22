@@ -17,12 +17,12 @@ interface MarketplaceHomeShellProps {
 export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellProps): JSX.Element {
   const activeGoal = viewModel.goals.find((goal) => goal.is_active) ?? null
   const hasActiveFilters = viewModel.discovery.goal_id !== null || viewModel.discovery.search_query.length > 0
-  const discoveryHeading = activeGoal ? `Buscando en ${activeGoal.label.toLowerCase()}` : 'Busca por app o problema'
+  const discoveryHeading = activeGoal ? `Buscando en ${activeGoal.label.toLowerCase()}` : 'Buscar app por problema'
   const catalogTitle = viewModel.has_zero_results
     ? 'Sin resultados en tu filtro'
     : hasActiveFilters
       ? 'Resultados de tu filtro'
-      : 'Catalogo completo del marketplace'
+      : 'Catalogo completo de WiFiMoneyStack'
   const catalogSummary = viewModel.has_zero_results
     ? `No encontramos apps con tus filtros. Te mostramos ${viewModel.total_apps} apps activas para continuar.`
     : hasActiveFilters
@@ -50,7 +50,7 @@ export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellP
                 <Compass className="h-3.5 w-3.5" />
                 Busqueda guiada
               </p>
-              <h2 className="mt-1 font-heading text-lg font-semibold text-mp-home-text">{discoveryHeading}</h2>
+              <h2 className="mt-1 font-heading text-lg font-semibold text-mp-home-accent-strong">{discoveryHeading}</h2>
             </div>
 
             {hasActiveFilters ? (
@@ -90,7 +90,7 @@ export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellP
 
         <section className="space-y-4 rounded-2xl border border-mp-home-border bg-mp-home-surface p-5 motion-safe:animate-[mp-fade-up_520ms_ease-out_both]">
           <div className="space-y-1">
-            <h2 className="font-heading text-xl font-semibold text-mp-home-text">{catalogTitle}</h2>
+            <h2 className="font-heading text-xl font-semibold text-mp-home-accent-strong">{catalogTitle}</h2>
             <p className="text-sm text-mp-home-muted">{catalogSummary}</p>
           </div>
 
@@ -103,7 +103,7 @@ export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellP
               />
 
               <div className="space-y-2 rounded-xl border border-mp-home-border bg-mp-home-surface-strong p-4">
-                <p className="text-sm font-semibold text-mp-home-text">Catalogo completo disponible</p>
+                <p className="text-sm font-semibold text-mp-home-accent-strong">Catalogo completo disponible</p>
                 <p className="text-xs text-mp-home-muted">Estas son las apps activas sin filtros para que sigas avanzando.</p>
               </div>
 

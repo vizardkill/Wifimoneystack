@@ -12,7 +12,7 @@ interface HomeHeroProps {
 export function HomeHero({ hero, totalApps }: HomeHeroProps): JSX.Element {
   return (
     <section className="relative isolate overflow-hidden rounded-3xl border border-mp-home-border bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.18),transparent_44%),linear-gradient(130deg,#050b14_22%,#0d1728_100%)] px-6 py-7 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-      <div className="mp-ambient-grid pointer-events-none absolute inset-0 opacity-20 [mask-image:radial-gradient(circle_at_center,black,transparent_72%)]" aria-hidden />
+      <div className="mp-ambient-grid pointer-events-none absolute inset-0 opacity-20 mask-[radial-gradient(circle_at_center,black,transparent_72%)]" aria-hidden />
       <div className="pointer-events-none absolute -right-16 top-8 h-40 w-40 rounded-full border border-mp-home-accent-strong/35 motion-safe:animate-[mp-float_10s_ease-in-out_infinite]" aria-hidden />
       <div className="pointer-events-none absolute -left-12 bottom-0 h-24 w-24 rounded-full bg-mp-home-accent-strong/20 blur-2xl motion-safe:animate-[mp-float_8s_ease-in-out_infinite]" aria-hidden />
       <div className="pointer-events-none absolute -left-14 top-12 h-40 w-40 rounded-full bg-mp-home-accent/18 blur-3xl motion-safe:animate-[mp-pulse-soft_8s_ease-in-out_infinite]" aria-hidden />
@@ -24,7 +24,7 @@ export function HomeHero({ hero, totalApps }: HomeHeroProps): JSX.Element {
             {hero.badge}
           </p>
 
-          <h1 className="max-w-3xl text-balance font-heading text-3xl font-bold leading-tight text-mp-home-text sm:text-4xl lg:text-[2.7rem]">
+          <h1 className="max-w-3xl text-balance font-heading text-3xl font-bold leading-tight text-mp-home-accent-strong sm:text-4xl lg:text-[2.7rem]">
             {hero.title}
           </h1>
 

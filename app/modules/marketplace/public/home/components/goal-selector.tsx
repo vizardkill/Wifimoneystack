@@ -12,7 +12,7 @@ interface GoalSelectorProps {
 export function GoalSelector({ goals }: GoalSelectorProps): JSX.Element {
   return (
     <section className="space-y-3">
-      <h2 className="font-heading text-xl font-semibold text-mp-home-text">Que quieres lograr hoy?</h2>
+      <h2 className="font-heading text-xl font-semibold text-mp-home-accent-strong">Que quieres lograr hoy?</h2>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {goals.map((goal, index) => (

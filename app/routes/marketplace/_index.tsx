@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return data({
     viewModel,
-    error: result.error ? (result.message ?? 'No pudimos cargar el marketplace.') : null
+    error: result.error ? (result.message ?? 'No pudimos cargar WiFiMoneyStack.') : null
   })
 }
 
