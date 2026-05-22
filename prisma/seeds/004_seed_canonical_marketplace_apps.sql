@@ -366,6 +366,22 @@ VALUES
     (SELECT "id" FROM seed_actor),
     NOW(),
     NOW()
+  ),
+  (
+    '8c7df5b0-6cc5-4c6d-a4a8-9335d0f80f0c',
+    'brand-scaling-finder',
+    'Brand Scaling Finder',
+    'Pasa de idea a shortlist accionable: encuentra productos con potencial real para escalar pauta.',
+    'App de research para ecommerce que analiza nicho y subcategoria con IA para rankear oportunidades por recompra, diferenciacion, facilidad de anuncios, LTV y saturacion.',
+    'Selecciona bloque y subcategoria, genera el analisis y usa el ranking con plan de accion para decidir que producto testear primero esta semana.',
+    'WEB_LINK',
+    'ACTIVE',
+    'https://brand-scaling-finder.wifimoneystack.com',
+    NOW(),
+    (SELECT "id" FROM seed_actor),
+    (SELECT "id" FROM seed_actor),
+    NOW(),
+    NOW()
   )
 ON CONFLICT ("slug")
 DO UPDATE SET
