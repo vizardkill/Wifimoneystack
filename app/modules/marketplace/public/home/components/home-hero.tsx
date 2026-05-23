@@ -24,7 +24,7 @@ export function HomeHero({ hero, totalApps }: HomeHeroProps): JSX.Element {
             {hero.badge}
           </p>
 
-          <h1 className="max-w-3xl text-balance font-heading text-3xl font-bold leading-tight text-mp-home-accent-strong sm:text-4xl lg:text-[2.7rem]">
+          <h1 className="max-w-3xl text-balance font-heading text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-[2.7rem]">
             {hero.title}
           </h1>
 

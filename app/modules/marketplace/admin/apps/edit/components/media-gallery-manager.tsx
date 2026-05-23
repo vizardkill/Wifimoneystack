@@ -68,6 +68,16 @@ const buildReorderedMediaIds = (orderedIds: string[], fromIndex: number, toIndex
   return cloned
 }
 
+const buildMediaIdsWithPrimary = (orderedIds: string[], mediaId: string): string[] => {
+  const currentIndex = orderedIds.indexOf(mediaId)
+
+  if (currentIndex <= 0) {
+    return orderedIds
+  }
+
+  return buildReorderedMediaIds(orderedIds, currentIndex, 0)
+}
+
 const sanitizeStorageSegment = (value: string): string => {
   return value
     .toLowerCase()
@@ -179,6 +189,12 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
   const videos = useMemo(() => draftMedia.filter((media) => media.type === 'VIDEO'), [draftMedia])
 
   const screenshotIds = screenshots.map((screenshot) => screenshot.id)
+  const galleryPreviewMediaIds = useMemo(() => {
+    return draftMedia
+      .filter((media) => media.type === 'SCREENSHOT' || media.type === 'VIDEO')
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((media) => media.id)
+  }, [draftMedia])
 
   const registerFeedback = getRegisterFeedback(registerMediaFetcher.data)
 
@@ -828,62 +844,86 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
 
             <section className="space-y-3">
               <h3 className="text-sm font-semibold text-slate-700">Capturas actuales</h3>
+              <p className="text-xs text-slate-500">La captura marcada como Principal se mostrara primero en la vista publica.</p>
               {screenshotCount > 0 ? (
                 <div className="space-y-3">
-                  {screenshots.map((screenshot, index) => (
-                    <div key={screenshot.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
-                      <img
-                        src={screenshot.public_url ?? ''}
-                        alt={screenshot.alt_text ?? 'Screenshot'}
-                        className="h-20 w-36 rounded-lg border border-slate-200 object-cover"
-                      />
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Form method="post">
-                          <input type="hidden" name="intent" value="remove_media" />
-                          <input type="hidden" name="app_id" value={appId} />
-                          <input type="hidden" name="media_id" value={screenshot.id} />
-                          <input type="hidden" name="detach_from_draft" value="true" />
-                          <input type="hidden" name="remove_from_library" value="true" />
-                          <button
-                            type="submit"
-                            disabled={isBusy}
-                            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Quitar
-                          </button>
-                        </Form>
+                  {screenshots.map((screenshot, index) => {
+                    const isPrimaryScreenshot = galleryPreviewMediaIds[0] === screenshot.id
 
-                        <Form method="post">
-                          <input type="hidden" name="intent" value="reorder_media" />
-                          <input type="hidden" name="app_id" value={appId} />
-                          <input type="hidden" name="ordered_media_ids" value={buildReorderedMediaIds(screenshotIds, index, index - 1).join(',')} />
-                          <button
-                            type="submit"
-                            disabled={isBusy || index === 0}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
-                          >
-                            <ArrowUp className="h-3.5 w-3.5" />
-                            Subir
-                          </button>
-                        </Form>
+                    return (
+                      <div key={screenshot.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                        <img
+                          src={screenshot.public_url ?? ''}
+                          alt={screenshot.alt_text ?? 'Screenshot'}
+                          className="h-20 w-36 rounded-lg border border-slate-200 object-cover"
+                        />
+                        <div className="flex flex-wrap items-center gap-2">
+                          {isPrimaryScreenshot && (
+                            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                              Principal
+                            </span>
+                          )}
 
-                        <Form method="post">
-                          <input type="hidden" name="intent" value="reorder_media" />
-                          <input type="hidden" name="app_id" value={appId} />
-                          <input type="hidden" name="ordered_media_ids" value={buildReorderedMediaIds(screenshotIds, index, index + 1).join(',')} />
-                          <button
-                            type="submit"
-                            disabled={isBusy || index === screenshots.length - 1}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
-                          >
-                            <ArrowDown className="h-3.5 w-3.5" />
-                            Bajar
-                          </button>
-                        </Form>
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="reorder_media" />
+                            <input type="hidden" name="app_id" value={appId} />
+                            <input type="hidden" name="ordered_media_ids" value={buildMediaIdsWithPrimary(galleryPreviewMediaIds, screenshot.id).join(',')} />
+                            <button
+                              type="submit"
+                              disabled={isBusy || isPrimaryScreenshot}
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-40"
+                            >
+                              Marcar principal
+                            </button>
+                          </Form>
+
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="remove_media" />
+                            <input type="hidden" name="app_id" value={appId} />
+                            <input type="hidden" name="media_id" value={screenshot.id} />
+                            <input type="hidden" name="detach_from_draft" value="true" />
+                            <input type="hidden" name="remove_from_library" value="true" />
+                            <button
+                              type="submit"
+                              disabled={isBusy}
+                              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Quitar
+                            </button>
+                          </Form>
+
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="reorder_media" />
+                            <input type="hidden" name="app_id" value={appId} />
+                            <input type="hidden" name="ordered_media_ids" value={buildReorderedMediaIds(screenshotIds, index, index - 1).join(',')} />
+                            <button
+                              type="submit"
+                              disabled={isBusy || index === 0}
+                              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                            >
+                              <ArrowUp className="h-3.5 w-3.5" />
+                              Subir
+                            </button>
+                          </Form>
+
+                          <Form method="post">
+                            <input type="hidden" name="intent" value="reorder_media" />
+                            <input type="hidden" name="app_id" value={appId} />
+                            <input type="hidden" name="ordered_media_ids" value={buildReorderedMediaIds(screenshotIds, index, index + 1).join(',')} />
+                            <button
+                              type="submit"
+                              disabled={isBusy || index === screenshots.length - 1}
+                              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                              Bajar
+                            </button>
+                          </Form>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">

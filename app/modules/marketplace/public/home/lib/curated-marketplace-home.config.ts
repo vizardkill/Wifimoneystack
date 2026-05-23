@@ -2,7 +2,7 @@ import type { CuratedStackDefinition, GoalRouteDefinition, MarketplaceHeroDefini
 
 export const MARKETPLACE_HOME_HERO: MarketplaceHeroDefinition = {
   badge: 'WiFiMoneyStack operativo para ecommerce real',
-  title: '',
+  title: 'Elige un objetivo y activa la app en minutos.',
   subtitle: 'Filtra por objetivo, explora el catalogo completo y avanza sin salir de WiFiMoneyStack.',
   supporting_points: [
     'Rutas claras para vender mas, lanzar rapido, validar productos y ordenar operacion.',
