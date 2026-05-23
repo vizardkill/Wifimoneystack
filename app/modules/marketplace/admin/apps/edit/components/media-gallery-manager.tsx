@@ -163,13 +163,13 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
   const imageFileInputRef = useRef<HTMLInputElement | null>(null)
   const videoUrlInputRef = useRef<HTMLInputElement | null>(null)
   const prepareUploadResolverRef = useRef<((value: PrepareUploadActionResponse | null) => void) | null>(null)
+  const registerMediaResolverRef = useRef<((value: RegisterMediaActionResponse | null) => void) | null>(null)
 
-  const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null)
-  const [selectedImageName, setSelectedImageName] = useState<string>('')
+  const [selectedImagePreviewUrls, setSelectedImagePreviewUrls] = useState<string[]>([])
+  const [selectedImageNames, setSelectedImageNames] = useState<string[]>([])
   const [uploadPhase, setUploadPhase] = useState<ImageUploadPhase>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadHint, setUploadHint] = useState<string | null>(null)
-  const [pendingLocalFallbackHint, setPendingLocalFallbackHint] = useState(false)
   const [activeStep, setActiveStep] = useState<MediaWizardStep>('ICON')
 
   const icons = useMemo(() => draftMedia.filter((media) => media.type === 'ICON'), [draftMedia])
@@ -228,44 +228,42 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
       return
     }
 
-    if (!pendingLocalFallbackHint) {
+    if (registerMediaResolverRef.current === null) {
       return
     }
 
-    if (registerFeedback?.success) {
-      setUploadHint('Bucket no disponible: se registró la imagen en modo local temporal para continuar el flujo.')
-    }
-
-    setPendingLocalFallbackHint(false)
-  }, [pendingLocalFallbackHint, registerFeedback?.success, registerMediaFetcher.state])
+    const resolve = registerMediaResolverRef.current
+    registerMediaResolverRef.current = null
+    resolve(getRegisterFeedback(registerMediaFetcher.data))
+  }, [registerMediaFetcher.data, registerMediaFetcher.state])
 
   useEffect(() => {
     return () => {
-      if (typeof selectedImagePreviewUrl === 'string' && selectedImagePreviewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(selectedImagePreviewUrl)
-      }
+      selectedImagePreviewUrls.forEach((previewUrl) => {
+        if (previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl)
+        }
+      })
     }
-  }, [selectedImagePreviewUrl])
+  }, [selectedImagePreviewUrls])
 
   const handleImageFileChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0]
+    const files = Array.from(event.target.files ?? [])
 
     setUploadError(null)
     setUploadHint(null)
 
-    setSelectedImagePreviewUrl((previousPreview) => {
-      if (typeof previousPreview === 'string' && previousPreview.startsWith('blob:')) {
-        URL.revokeObjectURL(previousPreview)
-      }
+    setSelectedImagePreviewUrls((previousPreviews) => {
+      previousPreviews.forEach((previewUrl) => {
+        if (previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl)
+        }
+      })
 
-      if (!file) {
-        return null
-      }
-
-      return URL.createObjectURL(file)
+      return files.map((file) => URL.createObjectURL(file))
     })
 
-    setSelectedImageName(file?.name ?? '')
+    setSelectedImageNames(files.map((file) => file.name))
   }, [])
 
   const handleImageUploadSubmit = useCallback(
@@ -280,108 +278,150 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
       const altTextRaw = formData.get('alt_text')
       const altText = typeof altTextRaw === 'string' ? altTextRaw.trim() : ''
 
-      const fileEntry = formData.get('image_file')
-      if (!(fileEntry instanceof File) || fileEntry.size <= 0) {
+      const fileEntries = formData.getAll('image_file').flatMap((entry) => (entry instanceof File && entry.size > 0 ? [entry] : []))
+
+      if (fileEntries.length === 0) {
         setUploadError('Selecciona un archivo de imagen antes de continuar.')
         return
       }
 
-      if (!ALLOWED_IMAGE_TYPES.has(fileEntry.type)) {
-        setUploadError('Formato no soportado. Usa PNG, JPG o WEBP.')
+      if (mediaType === 'ICON' && fileEntries.length > 1) {
+        setUploadError('El icono solo admite un archivo por carga.')
         return
       }
 
-      if (fileEntry.size > MAX_IMAGE_SIZE_BYTES) {
-        setUploadError('La imagen supera el máximo de 10MB.')
-        return
-      }
-
-      setUploadError(null)
-      setUploadHint(null)
-      setPendingLocalFallbackHint(false)
-      setUploadPhase('preparing')
-
-      let resolvedStorageKey = ''
-      let resolvedPublicUrl = ''
-      let usedLocalFallback = false
-
-      try {
-        const prepareBody = new FormData()
-        prepareBody.set('intent', 'prepare_media_upload')
-        prepareBody.set('app_id', appId)
-        prepareBody.set('media_type', mediaType)
-        prepareBody.set('file_name', fileEntry.name)
-        prepareBody.set('content_type', fileEntry.type)
-        prepareBody.set('size_bytes', String(fileEntry.size))
-
-        const preparePayload = await new Promise<PrepareUploadActionResponse | null>((resolve) => {
-          prepareUploadResolverRef.current = resolve
-          void prepareUploadFetcher.submit(prepareBody, {
-            method: 'post',
-            action: window.location.pathname
-          })
-        })
-
-        const signedUrl = preparePayload?.details?.signed_url
-        const publicUrl = preparePayload?.details?.public_url
-        const storageKey = preparePayload?.details?.storage_key
-
-        if (preparePayload?.error || typeof signedUrl !== 'string' || typeof publicUrl !== 'string' || typeof storageKey !== 'string') {
-          throw new Error(preparePayload?.message ?? 'No se pudo preparar la carga en storage.')
+      for (const fileEntry of fileEntries) {
+        if (!ALLOWED_IMAGE_TYPES.has(fileEntry.type)) {
+          setUploadError(`Formato no soportado para "${fileEntry.name}". Usa PNG, JPG o WEBP.`)
+          return
         }
 
-        setUploadPhase('uploading')
-
-        const uploadResponse = await fetch(signedUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': fileEntry.type
-          },
-          body: fileEntry
-        })
-
-        if (!uploadResponse.ok) {
-          throw new Error('No se pudo subir el archivo al bucket firmado.')
-        }
-
-        resolvedStorageKey = storageKey
-        resolvedPublicUrl = publicUrl
-      } catch {
-        usedLocalFallback = true
-
-        try {
-          const dataUrl = await fileToDataUrl(fileEntry)
-          resolvedPublicUrl = dataUrl
-          resolvedStorageKey = buildLocalFallbackStorageKey(appId, mediaType, fileEntry.name)
-        } catch {
-          setUploadError('No fue posible procesar la imagen para registro local.')
-          setUploadPhase('idle')
+        if (fileEntry.size > MAX_IMAGE_SIZE_BYTES) {
+          setUploadError(`La imagen "${fileEntry.name}" supera el maximo de 10MB.`)
           return
         }
       }
 
-      const registerBody = new FormData()
-      registerBody.set('intent', 'register_media')
-      registerBody.set('app_id', appId)
-      registerBody.set('media_type', mediaType)
-      registerBody.set('storage_key', resolvedStorageKey)
-      registerBody.set('public_url', resolvedPublicUrl)
-      registerBody.set('alt_text', altText)
-      registerBody.set('attach_to_draft', 'true')
+      setUploadError(null)
+      setUploadHint(null)
+      setUploadPhase('preparing')
 
-      setUploadPhase('registering')
+      let successfulUploads = 0
+      let usedLocalFallbackAtLeastOnce = false
 
-      setPendingLocalFallbackHint(usedLocalFallback)
+      try {
+        for (const fileEntry of fileEntries) {
+          let resolvedStorageKey = ''
+          let resolvedPublicUrl = ''
+          let usedLocalFallback = false
 
-      void registerMediaFetcher.submit(registerBody, { method: 'post' })
+          try {
+            const prepareBody = new FormData()
+            prepareBody.set('intent', 'prepare_media_upload')
+            prepareBody.set('app_id', appId)
+            prepareBody.set('media_type', mediaType)
+            prepareBody.set('file_name', fileEntry.name)
+            prepareBody.set('content_type', fileEntry.type)
+            prepareBody.set('size_bytes', String(fileEntry.size))
+
+            const preparePayload = await new Promise<PrepareUploadActionResponse | null>((resolve) => {
+              prepareUploadResolverRef.current = resolve
+              void prepareUploadFetcher.submit(prepareBody, {
+                method: 'post',
+                action: window.location.pathname
+              })
+            })
+
+            const signedUrl = preparePayload?.details?.signed_url
+            const publicUrl = preparePayload?.details?.public_url
+            const storageKey = preparePayload?.details?.storage_key
+
+            if (preparePayload?.error || typeof signedUrl !== 'string' || typeof publicUrl !== 'string' || typeof storageKey !== 'string') {
+              throw new Error(preparePayload?.message ?? 'No se pudo preparar la carga en storage.')
+            }
+
+            setUploadPhase('uploading')
+
+            const uploadResponse = await fetch(signedUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': fileEntry.type
+              },
+              body: fileEntry
+            })
+
+            if (!uploadResponse.ok) {
+              throw new Error('No se pudo subir el archivo al bucket firmado.')
+            }
+
+            resolvedStorageKey = storageKey
+            resolvedPublicUrl = publicUrl
+          } catch {
+            usedLocalFallback = true
+
+            try {
+              const dataUrl = await fileToDataUrl(fileEntry)
+              resolvedPublicUrl = dataUrl
+              resolvedStorageKey = buildLocalFallbackStorageKey(appId, mediaType, fileEntry.name)
+            } catch {
+              throw new Error(`No fue posible procesar la imagen "${fileEntry.name}" para registro local.`)
+            }
+          }
+
+          const registerBody = new FormData()
+          registerBody.set('intent', 'register_media')
+          registerBody.set('app_id', appId)
+          registerBody.set('media_type', mediaType)
+          registerBody.set('storage_key', resolvedStorageKey)
+          registerBody.set('public_url', resolvedPublicUrl)
+          registerBody.set('alt_text', altText)
+          registerBody.set('attach_to_draft', 'true')
+
+          setUploadPhase('registering')
+
+          const registerPayload = await new Promise<RegisterMediaActionResponse | null>((resolve) => {
+            registerMediaResolverRef.current = resolve
+            void registerMediaFetcher.submit(registerBody, {
+              method: 'post',
+              action: window.location.pathname
+            })
+          })
+
+          if (registerPayload?.error || registerPayload?.success !== true) {
+            throw new Error(registerPayload?.message ?? `No se pudo registrar la imagen "${fileEntry.name}".`)
+          }
+
+          if (usedLocalFallback) {
+            usedLocalFallbackAtLeastOnce = true
+          }
+
+          successfulUploads += 1
+        }
+
+        setUploadPhase('idle')
+        setUploadHint(
+          usedLocalFallbackAtLeastOnce
+            ? 'Bucket no disponible para uno o mas archivos: se registraron en modo local temporal para continuar el flujo.'
+            : successfulUploads === 1
+              ? 'Imagen registrada correctamente.'
+              : `${successfulUploads} imagenes registradas correctamente.`
+        )
+      } catch (error) {
+        setUploadPhase('idle')
+        setUploadError(error instanceof Error ? error.message : 'No se pudo completar la carga de imagenes.')
+        return
+      }
 
       htmlForm.reset()
-      setSelectedImageName('')
-      setSelectedImagePreviewUrl((previousPreview) => {
-        if (typeof previousPreview === 'string' && previousPreview.startsWith('blob:')) {
-          URL.revokeObjectURL(previousPreview)
-        }
-        return null
+      setSelectedImageNames([])
+      setSelectedImagePreviewUrls((previousPreviews) => {
+        previousPreviews.forEach((previewUrl) => {
+          if (previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+          }
+        })
+
+        return []
       })
     },
     [appId, prepareUploadFetcher, registerMediaFetcher]
@@ -551,26 +591,43 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
 
               <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <label htmlFor="image_file" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Archivo (PNG/JPG/WEBP, maximo 10MB)
+                  {isIconStep ? 'Archivo (PNG/JPG/WEBP, maximo 10MB)' : 'Archivos (PNG/JPG/WEBP, maximo 10MB c/u)'}
                 </label>
                 <input
                   ref={imageFileInputRef}
                   id="image_file"
                   name="image_file"
                   type="file"
+                  multiple={!isIconStep}
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleImageFileChange}
                   className="block w-full cursor-pointer text-sm text-slate-700 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:opacity-90"
                 />
 
-                {selectedImageName.length > 0 && <p className="text-xs text-slate-500">Archivo seleccionado: {selectedImageName}</p>}
+                {selectedImageNames.length > 0 && (
+                  <p className="text-xs text-slate-500">
+                    {selectedImageNames.length === 1
+                      ? `Archivo seleccionado: ${selectedImageNames[0]}`
+                      : `Archivos seleccionados: ${selectedImageNames.length}`}
+                  </p>
+                )}
 
-                {selectedImagePreviewUrl && (
-                  <img
-                    src={selectedImagePreviewUrl}
-                    alt="Previsualizacion de archivo seleccionado"
-                    className="h-24 w-40 rounded-lg border border-slate-200 object-cover"
-                  />
+                {selectedImagePreviewUrls.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedImagePreviewUrls.slice(0, 4).map((previewUrl) => (
+                      <img
+                        key={previewUrl}
+                        src={previewUrl}
+                        alt="Previsualizacion de archivo seleccionado"
+                        className="h-24 w-40 rounded-lg border border-slate-200 object-cover"
+                      />
+                    ))}
+                    {selectedImagePreviewUrls.length > 4 && (
+                      <span className="inline-flex h-24 w-40 items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600">
+                        +{selectedImagePreviewUrls.length - 4} mas
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -598,7 +655,7 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
                 className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isImageUploadBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                {isImageUploadBusy ? toUploadPhaseMessage(uploadPhase) : isIconStep ? 'Subir y registrar icono' : 'Subir y registrar captura'}
+                {isImageUploadBusy ? toUploadPhaseMessage(uploadPhase) : isIconStep ? 'Subir y registrar icono' : 'Subir y registrar capturas'}
               </button>
             </form>
 
