@@ -50,6 +50,30 @@ export class AppStorefrontVersionDB {
 
   static async ensureDraft(app_id: string, actor_user_id: string): Promise<IMarketplaceAppStorefrontVersion> {
     return db.$transaction(async (tx) => {
+      const resolveDefaultLanguageCodes = async (): Promise<string[]> => {
+        const preferred = await tx.marketplaceLanguageCatalog.findMany({
+          where: {
+            is_active: true,
+            code: { in: ['es', 'en'] }
+          },
+          orderBy: [{ sort_order: 'asc' }, { label: 'asc' }],
+          select: { code: true }
+        })
+
+        if (preferred.length > 0) {
+          return preferred.map((language) => language.code)
+        }
+
+        const fallback = await tx.marketplaceLanguageCatalog.findMany({
+          where: { is_active: true },
+          orderBy: [{ sort_order: 'asc' }, { label: 'asc' }],
+          take: 2,
+          select: { code: true }
+        })
+
+        return fallback.map((language) => language.code)
+      }
+
       const existingDraft = await tx.marketplaceAppStorefrontVersion.findUnique({
         where: {
           app_id_kind: {
@@ -66,6 +90,7 @@ export class AppStorefrontVersionDB {
       const app = await tx.marketplaceApp.findUnique({
         where: { id: app_id },
         select: {
+          web_url: true,
           summary: true,
           description: true,
           instructions: true
@@ -75,9 +100,12 @@ export class AppStorefrontVersionDB {
       const summarySeed = app?.summary ?? ''
       const descriptionSeed = app?.description ?? summarySeed
       const instructionsSeed = app?.instructions ?? ''
+      const developerNameSeed = 'Marketplace Ecommerce Team'
+      const developerWebsiteSeed = app?.web_url ?? ''
+      const defaultLanguageCodes = await resolveDefaultLanguageCodes()
 
       if (!existingDraft) {
-        return tx.marketplaceAppStorefrontVersion.create({
+        const createdDraft = await tx.marketplaceAppStorefrontVersion.create({
           data: {
             app_id,
             kind: 'DRAFT',
@@ -85,10 +113,24 @@ export class AppStorefrontVersionDB {
             summary: summarySeed,
             description: descriptionSeed,
             instructions: instructionsSeed,
+            developer_name: developerNameSeed,
+            developer_website: developerWebsiteSeed,
             created_by_user_id: actor_user_id,
             updated_by_user_id: actor_user_id
           }
         })
+
+        if (defaultLanguageCodes.length > 0) {
+          await tx.marketplaceAppStorefrontVersionLanguage.createMany({
+            data: defaultLanguageCodes.map((languageCode, index) => ({
+              storefront_version_id: createdDraft.id,
+              language_code: languageCode,
+              sort_order: index
+            }))
+          })
+        }
+
+        return createdDraft
       }
 
       const isStructurallyEmptyDraft =
@@ -103,15 +145,29 @@ export class AppStorefrontVersionDB {
         existingDraft.media.length === 0
 
       if (isStructurallyEmptyDraft && (summarySeed || descriptionSeed || instructionsSeed)) {
-        return tx.marketplaceAppStorefrontVersion.update({
+        const updatedDraft = await tx.marketplaceAppStorefrontVersion.update({
           where: { id: existingDraft.id },
           data: {
             summary: summarySeed,
             description: descriptionSeed,
             instructions: instructionsSeed,
+            developer_name: developerNameSeed,
+            developer_website: developerWebsiteSeed,
             updated_by_user_id: actor_user_id
           }
         })
+
+        if (defaultLanguageCodes.length > 0) {
+          await tx.marketplaceAppStorefrontVersionLanguage.createMany({
+            data: defaultLanguageCodes.map((languageCode, index) => ({
+              storefront_version_id: existingDraft.id,
+              language_code: languageCode,
+              sort_order: index
+            }))
+          })
+        }
+
+        return updatedDraft
       }
 
       return tx.marketplaceAppStorefrontVersion.update({
