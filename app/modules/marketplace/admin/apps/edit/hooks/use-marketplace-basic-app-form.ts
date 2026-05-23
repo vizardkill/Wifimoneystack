@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type UseFormReturn } from 'react-hook-form'
@@ -78,6 +79,21 @@ export function useMarketplaceBasicAppForm({ defaultValues }: UseMarketplaceBasi
     defaultValues,
     mode: 'onSubmit'
   })
+
+  const resetValues = useMemo(
+    () => ({
+      name: defaultValues.name,
+      summary: defaultValues.summary,
+      slug: defaultValues.slug,
+      access_mode: defaultValues.access_mode,
+      web_url: defaultValues.web_url
+    }),
+    [defaultValues.name, defaultValues.summary, defaultValues.slug, defaultValues.access_mode, defaultValues.web_url]
+  )
+
+  useEffect(() => {
+    form.reset(resetValues)
+  }, [form, resetValues])
 
   const handleValidatedSubmit = (event: FormEvent<HTMLFormElement>): void => {
     const formElement = event.currentTarget

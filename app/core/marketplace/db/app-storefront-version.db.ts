@@ -49,23 +49,77 @@ export class AppStorefrontVersionDB {
   }
 
   static async ensureDraft(app_id: string, actor_user_id: string): Promise<IMarketplaceAppStorefrontVersion> {
-    return db.marketplaceAppStorefrontVersion.upsert({
-      where: {
-        app_id_kind: {
-          app_id,
-          kind: 'DRAFT'
+    return db.$transaction(async (tx) => {
+      const existingDraft = await tx.marketplaceAppStorefrontVersion.findUnique({
+        where: {
+          app_id_kind: {
+            app_id,
+            kind: 'DRAFT'
+          }
+        },
+        include: {
+          languages: { select: { id: true } },
+          media: { select: { id: true } }
         }
-      },
-      create: {
-        app_id,
-        kind: 'DRAFT',
-        readiness_status: 'INCOMPLETE',
-        created_by_user_id: actor_user_id,
-        updated_by_user_id: actor_user_id
-      },
-      update: {
-        updated_by_user_id: actor_user_id
+      })
+
+      const app = await tx.marketplaceApp.findUnique({
+        where: { id: app_id },
+        select: {
+          summary: true,
+          description: true,
+          instructions: true
+        }
+      })
+
+      const summarySeed = app?.summary ?? ''
+      const descriptionSeed = app?.description ?? summarySeed
+      const instructionsSeed = app?.instructions ?? ''
+
+      if (!existingDraft) {
+        return tx.marketplaceAppStorefrontVersion.create({
+          data: {
+            app_id,
+            kind: 'DRAFT',
+            readiness_status: 'INCOMPLETE',
+            summary: summarySeed,
+            description: descriptionSeed,
+            instructions: instructionsSeed,
+            created_by_user_id: actor_user_id,
+            updated_by_user_id: actor_user_id
+          }
+        })
       }
+
+      const isStructurallyEmptyDraft =
+        existingDraft.summary.trim().length === 0 &&
+        existingDraft.description.trim().length === 0 &&
+        existingDraft.instructions.trim().length === 0 &&
+        existingDraft.developer_name.trim().length === 0 &&
+        existingDraft.developer_website.trim().length === 0 &&
+        (existingDraft.support_email ?? '').trim().length === 0 &&
+        (existingDraft.support_url ?? '').trim().length === 0 &&
+        existingDraft.languages.length === 0 &&
+        existingDraft.media.length === 0
+
+      if (isStructurallyEmptyDraft && (summarySeed || descriptionSeed || instructionsSeed)) {
+        return tx.marketplaceAppStorefrontVersion.update({
+          where: { id: existingDraft.id },
+          data: {
+            summary: summarySeed,
+            description: descriptionSeed,
+            instructions: instructionsSeed,
+            updated_by_user_id: actor_user_id
+          }
+        })
+      }
+
+      return tx.marketplaceAppStorefrontVersion.update({
+        where: { id: existingDraft.id },
+        data: {
+          updated_by_user_id: actor_user_id
+        }
+      })
     })
   }
 

@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type UseFormRegisterReturn, type UseFormReturn } from 'react-hook-form'
@@ -53,6 +54,33 @@ export function useStorefrontDraftForm({ defaultValues }: UseStorefrontDraftForm
     defaultValues,
     mode: 'onSubmit'
   })
+
+  const resetValues = useMemo(
+    () => ({
+      summary: defaultValues.summary,
+      description: defaultValues.description,
+      instructions: defaultValues.instructions,
+      developer_name: defaultValues.developer_name,
+      developer_website: defaultValues.developer_website,
+      support_email: defaultValues.support_email,
+      support_url: defaultValues.support_url,
+      language_codes: defaultValues.language_codes
+    }),
+    [
+      defaultValues.summary,
+      defaultValues.description,
+      defaultValues.instructions,
+      defaultValues.developer_name,
+      defaultValues.developer_website,
+      defaultValues.support_email,
+      defaultValues.support_url,
+      defaultValues.language_codes
+    ]
+  )
+
+  useEffect(() => {
+    form.reset(resetValues)
+  }, [form, resetValues])
 
   const languageCodesRegister = form.register('language_codes')
 
