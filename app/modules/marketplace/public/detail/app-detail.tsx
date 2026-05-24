@@ -153,7 +153,10 @@ function buildUsageSteps(text: string | null | undefined, accessMode: Marketplac
 export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const storefront = app.presentation_mode === 'STOREFRONT' ? (app.storefront ?? null) : null
 
-  const iconUrl = app.media.find((media) => media.type === 'ICON' && typeof media.public_url === 'string' && media.public_url.length > 0)?.public_url ?? null
+  const iconUrl =
+    app.media
+      .filter((media) => media.type === 'ICON' && typeof media.public_url === 'string' && media.public_url.length > 0)
+      .sort((a, b) => b.sort_order - a.sort_order)[0]?.public_url ?? null
   const galleryItems: GalleryMedia[] = useMemo(() => {
     return app.media
       .filter((media) => (media.type === 'SCREENSHOT' || media.type === 'VIDEO') && typeof media.public_url === 'string' && media.public_url.length > 0)

@@ -82,13 +82,15 @@ export class CLS_ListPublishedMarketplaceApps {
       this._apps.map(async (app) => {
         const media = await AppMediaDB.listByApp(app.id, 'ICON')
         const screenshots = await AppMediaDB.listByApp(app.id, 'SCREENSHOT')
+        const latestIcon = media.length > 0 ? media[media.length - 1] : null
+
         return {
           id: app.id,
           slug: app.slug,
           name: app.name,
           summary: app.summary,
           access_mode: app.access_mode,
-          icon_url: resolveMarketplaceMediaUrl(media[0]?.public_url ?? null),
+          icon_url: resolveMarketplaceMediaUrl(latestIcon?.public_url ?? null),
           screenshot_count: screenshots.length
         }
       })
