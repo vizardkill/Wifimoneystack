@@ -61,3 +61,54 @@ psql "$DB_URL" -c "SELECT slug, access_mode, status FROM marketplace_apps WHERE 
 
 El proceso `prisma/seed.ts` usa la tabla `_prisma_seed_history` para ejecutar solo seeds nuevos o modificados (checksum por archivo). Por eso, normalmente no
 duplica datos al correr varias veces.
+
+## Guia rapida (modo dummies): conectar Facebook Insights
+
+Esta mini-guia es para dejar conectada la app sin enredos.
+
+### 1) Saca las 2 llaves que necesitas
+
+Necesitas solo esto:
+
+- `Access Token` de Meta
+- `Ad Account ID` (ID de cuenta publicitaria)
+
+Ruta unica para sacarlas:
+
+1. Abre `https://developers.facebook.com/tools/explorer/` (Graph API Explorer).
+2. Selecciona tu app de Meta arriba.
+3. Clic en **Get Token** -> **Get User Access Token**.
+4. Marca permisos: `ads_read` y `business_management`.
+5. Genera el token y copialo.
+6. En Ads Manager, entra a tu cuenta y copia el ID de cuenta publicitaria (ejemplo: `1166190552315146`).
+
+> Importante: en nuestro formulario usa el numero solo, sin `act_`.
+
+### 2) Conecta en Facebook Insights
+
+1. Abre la subapp `facebook-insights.wifimoneystack.com`.
+2. En **Token label** escribe un nombre facil (ejemplo: `biosoma`).
+3. En **Ad Account ID** pega el numero de la cuenta.
+4. En **Business ID** puedes dejar vacio.
+5. En **Access Token** pega el token de Meta.
+6. Clic en **Guardar conexion**.
+
+Si todo va bien, debe quedar en estado `ACTIVE`.
+
+### 3) Prueba rapida
+
+1. Elige el preset `spend_report`.
+2. Selecciona un rango de fechas con actividad real.
+3. Ejecuta el preset.
+
+Si no hubo gasto en ese rango, veras datos en cero (eso es normal).
+
+### 4) Si algo falla
+
+- `No autorizado`: recarga la pagina y vuelve a iniciar sesion en el marketplace.
+- `Ad account invalida`: revisa que sea el ID numerico correcto y que tu usuario tenga acceso a esa cuenta.
+- `Token invalido o expirado`: genera un token nuevo en Graph API Explorer.
+
+### 5) Seguridad
+
+No compartas tokens por chat ni en capturas. Si un token se expone, revocalo y genera otro.

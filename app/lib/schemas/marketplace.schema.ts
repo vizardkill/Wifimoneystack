@@ -32,6 +32,11 @@ const OptionalEmailSchema = z.preprocess(
   z.string().email('El correo de soporte no es válido').trim().optional()
 )
 
+const MarketplaceAppIdSchema = z.preprocess(
+  (v) => (typeof v === 'string' ? v.trim() : v),
+  z.string().min(1, 'ID de app inválido').max(160, 'ID de app inválido')
+)
+
 const FormBooleanSchema = z.preprocess((v) => {
   if (v === 'true') {
     return true
@@ -129,7 +134,7 @@ export const SaveMarketplaceAppStorefrontDraftSchema = z.object({
 export type SaveMarketplaceAppStorefrontDraftInput = z.infer<typeof SaveMarketplaceAppStorefrontDraftSchema>
 
 export const PrepareMarketplaceAppMediaUploadSchema = z.object({
-  app_id: z.string().uuid('ID de app inválido'),
+  app_id: MarketplaceAppIdSchema,
   media_type: z.enum(['ICON', 'SCREENSHOT']),
   file_name: z.string().min(1, 'El nombre del archivo es requerido').max(200, 'El nombre del archivo es demasiado largo').trim(),
   content_type: z.string().min(1, 'El tipo de archivo es requerido').max(120, 'El tipo de archivo es inválido').trim(),
@@ -144,7 +149,7 @@ export type PrepareMarketplaceAppMediaUploadInput = z.infer<typeof PrepareMarket
 
 export const RegisterMarketplaceAppMediaSchema = z
   .object({
-    app_id: z.string().uuid('ID de app inválido'),
+    app_id: MarketplaceAppIdSchema,
     media_type: z.enum(['ICON', 'SCREENSHOT', 'VIDEO']),
     storage_key: z.preprocess((v) => (v === '' ? undefined : v), z.string().max(500, 'La llave de storage es demasiado larga').trim().optional()),
     public_url: OptionalPublicMediaUrlSchema,
@@ -176,7 +181,7 @@ export const RegisterMarketplaceAppMediaSchema = z
 export type RegisterMarketplaceAppMediaInput = z.infer<typeof RegisterMarketplaceAppMediaSchema>
 
 export const RemoveMarketplaceAppMediaSchema = z.object({
-  app_id: z.string().uuid('ID de app inválido'),
+  app_id: MarketplaceAppIdSchema,
   media_id: z.string().uuid('ID de media inválido'),
   detach_from_draft: FormBooleanSchema.optional().default(true),
   remove_from_library: FormBooleanSchema.optional().default(false)
@@ -185,14 +190,14 @@ export const RemoveMarketplaceAppMediaSchema = z.object({
 export type RemoveMarketplaceAppMediaInput = z.infer<typeof RemoveMarketplaceAppMediaSchema>
 
 export const ReorderMarketplaceAppStorefrontMediaSchema = z.object({
-  app_id: z.string().uuid('ID de app inválido'),
+  app_id: MarketplaceAppIdSchema,
   ordered_media_ids: z.array(z.string().uuid('ID de media inválido')).min(1, 'Debes enviar al menos un media').max(40, 'Demasiados elementos para reordenar')
 })
 
 export type ReorderMarketplaceAppStorefrontMediaInput = z.infer<typeof ReorderMarketplaceAppStorefrontMediaSchema>
 
 export const PublishMarketplaceAppStorefrontSchema = z.object({
-  app_id: z.string().uuid('ID de app inválido')
+  app_id: MarketplaceAppIdSchema
 })
 
 export type PublishMarketplaceAppStorefrontInput = z.infer<typeof PublishMarketplaceAppStorefrontSchema>
@@ -206,7 +211,7 @@ export type ListMarketplaceLanguageCatalogInput = z.infer<typeof ListMarketplace
 // ── Publication Schema (admin) ────────────────────────────────────────────────
 
 export const UpdateAppPublicationSchema = z.object({
-  app_id: z.string().uuid('ID de app inválido'),
+  app_id: MarketplaceAppIdSchema,
   publish: z.boolean()
 })
 
