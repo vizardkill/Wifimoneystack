@@ -153,31 +153,53 @@ function buildUsageSteps(text: string | null | undefined, accessMode: Marketplac
 export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const storefront = app.presentation_mode === 'STOREFRONT' ? (app.storefront ?? null) : null
 
-  const orderedVisualMedia = app.media
-    .filter((media) => typeof media.public_url === 'string' && media.public_url.length > 0)
-    .sort((a, b) => a.sort_order - b.sort_order)
+  const latestIconMedia = app.media
+    .filter((media) => media.type === 'ICON' && typeof media.public_url === 'string' && media.public_url.length > 0)
+    .sort((a, b) => b.sort_order - a.sort_order)
 
-  const iconUrl =
-    orderedVisualMedia.find((media) => media.type === 'ICON')?.public_url ??
-    orderedVisualMedia.find((media) => media.type === 'SCREENSHOT')?.public_url ??
-    null
+  const orderedScreenshots = useMemo(() => {
+    return app.media
+      .filter((media) => media.type === 'SCREENSHOT' && typeof media.public_url === 'string' && media.public_url.length > 0)
+      .sort((a, b) => a.sort_order - b.sort_order)
+  }, [app.media])
 
-  const galleryItems: GalleryMedia[] = useMemo(() => {
+  const orderedVisualMedia = useMemo(() => {
     return app.media
       .filter((media) => (media.type === 'SCREENSHOT' || media.type === 'VIDEO') && typeof media.public_url === 'string' && media.public_url.length > 0)
-      .sort((a, b) => a.sort_order - b.sort_order)
+      .sort((a, b) => {
+        const orderDiff = a.sort_order - b.sort_order
+        if (orderDiff !== 0) {
+          return orderDiff
+        }
+
+        if (a.type === b.type) {
+          return 0
+        }
+
+        return a.type === 'SCREENSHOT' ? -1 : 1
+      })
+  }, [app.media])
+
+  const iconUrl = latestIconMedia[0]?.public_url ?? orderedScreenshots[0]?.public_url ?? null
+
+  const galleryItems: GalleryMedia[] = useMemo(() => {
+    return orderedVisualMedia
       .map((media) => ({
         id: media.id,
         type: media.type as 'SCREENSHOT' | 'VIDEO',
         url: media.public_url!,
         alt: media.alt_text ?? (media.type === 'VIDEO' ? `Video de ${app.name}` : `Captura de ${app.name}`)
       }))
-  }, [app.media, app.name])
+  }, [app.name, orderedVisualMedia])
+
+  const primaryScreenshotId = orderedScreenshots.at(0)?.id
+  const firstGalleryMediaId = galleryItems.at(0)?.id ?? ''
+  const defaultActiveMediaId = primaryScreenshotId ?? firstGalleryMediaId
 
   const supportedLanguages = storefront?.languages.map((language) => language.label).filter((label) => label.length > 0) ?? []
   const supportedLanguagesText = supportedLanguages.length > 0 ? supportedLanguages.join(' / ') : 'Español / Inglés'
 
-  const [activeMediaId, setActiveMediaId] = useState<string>(galleryItems[0]?.id ?? '')
+  const [activeMediaId, setActiveMediaId] = useState<string>(defaultActiveMediaId)
 
   useEffect(() => {
     if (galleryItems.length === 0) {
@@ -186,9 +208,9 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
     }
 
     if (!galleryItems.some((media) => media.id === activeMediaId)) {
-      setActiveMediaId(galleryItems[0].id)
+      setActiveMediaId(defaultActiveMediaId)
     }
-  }, [activeMediaId, galleryItems])
+  }, [activeMediaId, defaultActiveMediaId, galleryItems])
 
   const activeMedia: GalleryMedia | null = galleryItems.length > 0 ? (galleryItems.find((media) => media.id === activeMediaId) ?? galleryItems[0]) : null
 

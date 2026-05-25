@@ -63,6 +63,7 @@ export class CLS_ListAdminMarketplaceApps {
     const appsWithIcons = await Promise.all(
       this._apps.map(async (app) => {
         const media = await AppMediaDB.listByApp(app.id, 'ICON')
+        const latestIconUrl = media.length > 0 ? media[media.length - 1].public_url : null
 
         return {
           id: app.id,
@@ -70,7 +71,7 @@ export class CLS_ListAdminMarketplaceApps {
           name: app.name,
           status: app.status,
           access_mode: app.access_mode,
-          icon_url: resolveMarketplaceMediaUrl(media[0]?.public_url ?? null)
+          icon_url: resolveMarketplaceMediaUrl(latestIconUrl)
         }
       })
     )
