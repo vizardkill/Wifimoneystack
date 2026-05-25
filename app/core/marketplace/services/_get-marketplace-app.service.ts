@@ -1,4 +1,5 @@
 import { AccessRequestDB } from '@/core/marketplace/db/access-request.db'
+import { AppStorefrontVersionDB } from '@/core/marketplace/db/app-storefront-version.db'
 import { AppUsageEventDB } from '@/core/marketplace/db/app-usage-event.db'
 import { MarketplaceAppDB } from '@/core/marketplace/db/marketplace-app.db'
 
@@ -116,7 +117,35 @@ export class CLS_GetMarketplaceApp {
         }))
       : []
 
+    const draftStorefront = hasPublishedStorefront ? null : await AppStorefrontVersionDB.findByAppAndKindWithRelations(app.id, 'DRAFT')
+
+    const draftStorefrontMedia = draftStorefront
+      ? draftStorefront.media.map((relation) => ({
+          id: relation.media.id,
+          type: relation.media.type,
+          public_url: resolveMarketplaceMediaUrl(relation.media.public_url),
+          alt_text: relation.media.alt_text,
+          sort_order: relation.sort_order
+        }))
+      : []
+
+    const resolvePrimaryMediaId = (mediaList: Array<{ id: string; type: string; public_url: string | null }>): string | null => {
+      const visualMedia = mediaList.filter(
+        (media) => (media.type === 'SCREENSHOT' || media.type === 'VIDEO') && typeof media.public_url === 'string' && media.public_url.length > 0
+      )
+
+      if (visualMedia.length === 0) {
+        return null
+      }
+
+      const primaryScreenshot = visualMedia.find((media) => media.type === 'SCREENSHOT')
+      return primaryScreenshot?.id ?? visualMedia[0].id
+    }
+
     const presentation_mode = hasPublishedStorefront ? 'STOREFRONT' : 'LEGACY'
+    const primary_media_id = hasPublishedStorefront
+      ? resolvePrimaryMediaId(storefrontMedia)
+      : resolvePrimaryMediaId(draftStorefrontMedia.length > 0 ? draftStorefrontMedia : legacyMedia)
 
     this._statusRequest = CONFIG_GET_MARKETPLACE_APP.RequestStatus.Completed
     this._requestResponse = {
@@ -130,6 +159,7 @@ export class CLS_GetMarketplaceApp {
         access_mode: app.access_mode,
         web_url: app.web_url,
         presentation_mode,
+        primary_media_id,
         media: hasPublishedStorefront ? storefrontMedia : legacyMedia,
         storefront: hasPublishedStorefront
           ? {

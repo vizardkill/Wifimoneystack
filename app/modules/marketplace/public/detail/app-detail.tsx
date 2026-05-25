@@ -40,6 +40,7 @@ interface MarketplaceAppDetail {
   access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
   web_url?: string | null
   presentation_mode?: 'LEGACY' | 'STOREFRONT'
+  primary_media_id?: string | null
   media: AppMedia[]
   storefront?: StorefrontData | null
   has_active_artifact: boolean
@@ -152,6 +153,7 @@ function buildUsageSteps(text: string | null | undefined, accessMode: Marketplac
 
 export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const storefront = app.presentation_mode === 'STOREFRONT' ? (app.storefront ?? null) : null
+  const primaryMediaId = app.primary_media_id ?? null
 
   const latestIconMedia = app.media
     .filter((media) => media.type === 'ICON' && typeof media.public_url === 'string' && media.public_url.length > 0)
@@ -160,13 +162,33 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
   const orderedScreenshots = useMemo(() => {
     return app.media
       .filter((media) => media.type === 'SCREENSHOT' && typeof media.public_url === 'string' && media.public_url.length > 0)
-      .sort((a, b) => a.sort_order - b.sort_order)
-  }, [app.media])
+      .sort((a, b) => {
+        if (primaryMediaId !== null) {
+          const aIsPrimary = a.id === primaryMediaId
+          const bIsPrimary = b.id === primaryMediaId
+
+          if (aIsPrimary !== bIsPrimary) {
+            return aIsPrimary ? -1 : 1
+          }
+        }
+
+        return a.sort_order - b.sort_order
+      })
+  }, [app.media, primaryMediaId])
 
   const orderedVisualMedia = useMemo(() => {
     return app.media
       .filter((media) => (media.type === 'SCREENSHOT' || media.type === 'VIDEO') && typeof media.public_url === 'string' && media.public_url.length > 0)
       .sort((a, b) => {
+        if (primaryMediaId !== null) {
+          const aIsPrimary = a.id === primaryMediaId
+          const bIsPrimary = b.id === primaryMediaId
+
+          if (aIsPrimary !== bIsPrimary) {
+            return aIsPrimary ? -1 : 1
+          }
+        }
+
         const orderDiff = a.sort_order - b.sort_order
         if (orderDiff !== 0) {
           return orderDiff
@@ -178,7 +200,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
         return a.type === 'SCREENSHOT' ? -1 : 1
       })
-  }, [app.media])
+  }, [app.media, primaryMediaId])
 
   const iconUrl = latestIconMedia[0]?.public_url ?? orderedScreenshots[0]?.public_url ?? null
 
@@ -194,7 +216,8 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
   const primaryScreenshotId = orderedScreenshots.at(0)?.id
   const firstGalleryMediaId = galleryItems.at(0)?.id ?? ''
-  const defaultActiveMediaId = primaryScreenshotId ?? firstGalleryMediaId
+  const primaryGalleryMediaId = primaryMediaId !== null && galleryItems.some((media) => media.id === primaryMediaId) ? primaryMediaId : null
+  const defaultActiveMediaId = primaryGalleryMediaId ?? primaryScreenshotId ?? firstGalleryMediaId
 
   const supportedLanguages = storefront?.languages.map((language) => language.label).filter((label) => label.length > 0) ?? []
   const supportedLanguagesText = supportedLanguages.length > 0 ? supportedLanguages.join(' / ') : 'Español / Inglés'

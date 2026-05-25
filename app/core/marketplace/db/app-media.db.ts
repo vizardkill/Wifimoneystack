@@ -73,4 +73,18 @@ export class AppMediaDB {
   static async updateSortOrder(id: string, sort_order: number): Promise<MarketplaceAppMedia> {
     return db.marketplaceAppMedia.update({ where: { id }, data: { sort_order } })
   }
+
+  static async reorderByMediaIds(app_id: string, ordered_media_ids: string[]): Promise<void> {
+    await db.$transaction(
+      ordered_media_ids.map((media_id, index) =>
+        db.marketplaceAppMedia.updateMany({
+          where: {
+            app_id,
+            id: media_id
+          },
+          data: { sort_order: index }
+        })
+      )
+    )
+  }
 }

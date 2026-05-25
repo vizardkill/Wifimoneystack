@@ -1,4 +1,5 @@
 import { UserDB } from '@/core/auth/db/user.db'
+import { AppMediaDB } from '@/core/marketplace/db/app-media.db'
 import { AppStorefrontVersionMediaDB } from '@/core/marketplace/db/app-storefront-version-media.db'
 import { AppStorefrontVersionDB } from '@/core/marketplace/db/app-storefront-version.db'
 import { MarketplaceAppDB } from '@/core/marketplace/db/marketplace-app.db'
@@ -85,6 +86,17 @@ export class CLS_ReorderMarketplaceAppStorefrontMedia {
       this._draftVersionId = draft.id
 
       await AppStorefrontVersionMediaDB.reorderByMediaIds(draft.id, this._payload.ordered_media_ids)
+
+      const appMedia = await AppMediaDB.listByApp(this._payload.app_id)
+      const visualMedia = appMedia.filter((media) => media.type === 'SCREENSHOT' || media.type === 'VIDEO')
+      const visualMediaIds = visualMedia.map((media) => media.id)
+      const selectedVisualIds = this._payload.ordered_media_ids.filter((mediaId) => visualMediaIds.includes(mediaId))
+      const remainingVisualIds = visualMediaIds.filter((mediaId) => !selectedVisualIds.includes(mediaId))
+      const legacyVisualOrder = [...selectedVisualIds, ...remainingVisualIds]
+
+      if (legacyVisualOrder.length > 0) {
+        await AppMediaDB.reorderByMediaIds(this._payload.app_id, legacyVisualOrder)
+      }
     } catch (err) {
       this._statusRequest = CONFIG_REORDER_MARKETPLACE_APP_STOREFRONT_MEDIA.RequestStatus.Error
       this._requestResponse = { error: true, message: 'Error reordenando media de storefront.' }

@@ -125,6 +125,7 @@ export namespace CONFIG_GET_MARKETPLACE_APP {
       access_mode: MarketplaceAppAccessMode
       web_url: string | null
       presentation_mode?: 'LEGACY' | 'STOREFRONT'
+      primary_media_id: string | null
       media: Array<{
         id: string
         type: string
