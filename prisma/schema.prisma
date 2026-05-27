@@ -41,6 +41,7 @@ model User {
   password_reset_tokens PasswordResetToken[]
   auth_providers        UserAuthProvider[]
   meta_connection       UserMetaConnection?
+  marketplace_subscription MarketplaceUserSubscription?
 
   @@index([email])
   @@index([role, created_at])
@@ -142,6 +143,11 @@ enum MarketplaceAccessStatus {
   REVOKED
 }
 
+enum MarketplaceSubscriptionStatus {
+  ACTIVE
+  EXPIRED
+}
+
 enum MarketplaceAppStatus {
   DRAFT
   ACTIVE
@@ -213,6 +219,25 @@ model MarketplaceAccessRequest {
 
   @@index([status, created_at])
   @@map("marketplace_access_requests")
+}
+
+/// Vigencia de acceso comercial al marketplace por usuario
+model MarketplaceUserSubscription {
+  id                 String                        @id @default(uuid())
+  user_id            String                        @unique
+  status             MarketplaceSubscriptionStatus @default(ACTIVE)
+  starts_at          DateTime
+  expires_at         DateTime
+  renewed_at         DateTime?
+  renewed_by_user_id String?
+  created_at         DateTime                      @default(now())
+  updated_at         DateTime                      @updatedAt
+
+  user               User                          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([status, expires_at])
+  @@index([expires_at])
+  @@map("marketplace_user_subscriptions")
 }
 
 /// Aplicacion/herramienta listada en el marketplace

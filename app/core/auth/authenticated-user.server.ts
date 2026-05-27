@@ -69,20 +69,16 @@ export async function getMarketplaceAuthorizedRequestUser(request: Request): Pro
     return { ok: true, user: { ...user, marketplace_access_status: 'APPROVED' } }
   }
 
-  if (user.source === 'subapp') {
-    if (user.marketplace_access_status === 'APPROVED') {
-      return { ok: true, user }
-    }
+  const { CLS_GetMarketplaceMembershipSnapshot } = await import('@/core/marketplace/marketplace.server')
+  const membershipResult = await new CLS_GetMarketplaceMembershipSnapshot({ user_id: user.id }).main()
+  const membership = membershipResult.data
 
+  if (membership?.access_status !== 'APPROVED') {
     return { ok: false, status: 403, message: 'Acceso marketplace no aprobado.' }
   }
 
-  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
-  const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: user.id }).main()
-  const accessStatus = accessResult.data?.access_status ?? 'NONE'
-
-  if (accessStatus !== 'APPROVED') {
-    return { ok: false, status: 403, message: 'Acceso marketplace no aprobado.' }
+  if (!membership.can_access_subapps) {
+    return { ok: false, status: 403, message: 'Tu vigencia de marketplace vencio. Renueva para continuar.' }
   }
 
   return {

@@ -8,6 +8,7 @@
 // ── US1: Acceso al marketplace ─────────────────────────────────────────────────
 export { CLS_RequestMarketplaceAccess } from './services/_request-access.service'
 export { CLS_GetMarketplaceAccessStatus } from './services/_get-access-status.service'
+export { CLS_GetMarketplaceMembershipSnapshot } from './services/_get-membership-snapshot.service'
 
 // ── US2: Vitrina de apps ───────────────────────────────────────────────────────
 export { CLS_ListPublishedMarketplaceApps } from './services/_list-published-apps.service'

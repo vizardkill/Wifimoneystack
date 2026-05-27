@@ -3,6 +3,8 @@ import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { type GoogleCallbackState, type GoogleUserProfile } from '@lib/interfaces'
 import { AuthProviderType } from '@lib/interfaces'
 
+import type { MarketplaceMembershipSnapshot } from '@types'
+
 const normalizeAccessStatus = (value: string | undefined): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
   if (value === 'APPROVED' || value === 'PENDING' || value === 'REJECTED' || value === 'REVOKED') {
     return value
@@ -17,6 +19,18 @@ const normalizeRole = (value: string | undefined): 'USER' | 'ADMIN' | 'SUPERADMI
   }
 
   return 'USER'
+}
+
+const resolveSubappAccessStatus = (membership: MarketplaceMembershipSnapshot | null): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
+  if (!membership) {
+    return 'NONE'
+  }
+
+  if (membership.access_status === 'APPROVED' && !membership.can_access_subapps) {
+    return 'REVOKED'
+  }
+
+  return normalizeAccessStatus(membership.access_status)
 }
 
 const encodeParams = (profile: GoogleUserProfile): string => {
@@ -66,7 +80,7 @@ const isGoogleUserProfile = (value: unknown): value is GoogleUserProfile => {
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response> {
   const { authenticateUserAgnosticController, exchangeGoogleCodeController } = await import('@/core/auth/auth.server')
   const { commitSession, userSessionStorage } = await import('@/core/auth/cookie.server')
-  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
+  const { CLS_GetMarketplaceMembershipSnapshot } = await import('@/core/marketplace/marketplace.server')
   const { resolveSafeReturnTo, serializeSubappSessionCookie } = await import('@/core/auth/subapp-session.server')
 
   const url = new URL(request.url)
@@ -143,8 +157,8 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response>
   let accessStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' = 'APPROVED'
 
   if (normalizedUser.role !== 'ADMIN' && normalizedUser.role !== 'SUPERADMIN') {
-    const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: normalizedUser.id }).main()
-    accessStatus = normalizeAccessStatus(accessResult.data?.access_status)
+    const membershipResult = await new CLS_GetMarketplaceMembershipSnapshot({ user_id: normalizedUser.id }).main()
+    accessStatus = resolveSubappAccessStatus(membershipResult.data ?? null)
   }
 
   const subappCookie = await serializeSubappSessionCookie({

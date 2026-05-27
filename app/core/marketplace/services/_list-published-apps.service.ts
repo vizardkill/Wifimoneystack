@@ -6,6 +6,7 @@ import { trackError } from '@lib/functions/_track_error.function'
 
 import { CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS } from '@types'
 
+import { CLS_GetMarketplaceMembershipSnapshot } from './_get-membership-snapshot.service'
 import { resolveMarketplaceMediaUrl } from './_resolve-marketplace-media-url.helper'
 
 type RequestStatus = CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS.RequestStatus
@@ -44,11 +45,18 @@ export class CLS_ListPublishedMarketplaceApps {
   private async _verifyAccess(): Promise<void> {
     try {
       const request = await AccessRequestDB.findByUserId(this._payload.user_id)
-      if (request?.status !== 'APPROVED') {
+      const membership = await new CLS_GetMarketplaceMembershipSnapshot({ user_id: this._payload.user_id }).main()
+
+      if (request?.status !== 'APPROVED' || membership.data?.can_access_marketplace !== true) {
+        const message =
+          membership.data?.access_status === 'APPROVED'
+            ? 'Tu vigencia de marketplace vencio. Renueva para volver a usar las aplicaciones.'
+            : 'No tienes acceso aprobado al marketplace.'
+
         this._statusRequest = CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS.RequestStatus.AccessDenied
         this._requestResponse = {
           error: true,
-          message: 'No tienes acceso aprobado al marketplace.',
+          message,
           status: CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS.RequestStatus.AccessDenied
         }
       }

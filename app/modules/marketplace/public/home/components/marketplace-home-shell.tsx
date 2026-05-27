@@ -7,14 +7,18 @@ import { AppGrid } from '../../catalog'
 import { DiscoveryEmptyState } from './discovery-empty-state'
 import { GoalSelector } from './goal-selector'
 import { HomeHero } from './home-hero'
+import { MarketplaceMembershipCard } from './marketplace-membership-card'
 import type { MarketplaceHomeViewModel } from '../types/marketplace-home.types'
+
+import type { MarketplaceMembershipSnapshot } from '@types'
 
 interface MarketplaceHomeShellProps {
   viewModel: MarketplaceHomeViewModel
   error: string | null
+  membership: MarketplaceMembershipSnapshot
 }
 
-export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellProps): JSX.Element {
+export function MarketplaceHomeShell({ viewModel, error, membership }: MarketplaceHomeShellProps): JSX.Element {
   const activeGoal = viewModel.goals.find((goal) => goal.is_active) ?? null
   const hasActiveFilters = viewModel.discovery.goal_id !== null || viewModel.discovery.search_query.length > 0
   const discoveryHeading = activeGoal ? `Buscando en ${activeGoal.label.toLowerCase()}` : 'Buscar app por problema'
@@ -41,6 +45,8 @@ export function MarketplaceHomeShell({ viewModel, error }: MarketplaceHomeShellP
         {error !== null ? <div className="rounded-xl border border-red-500/40 bg-red-950/50 px-4 py-3 text-sm text-red-200">{error}</div> : null}
 
         <HomeHero hero={viewModel.hero} totalApps={viewModel.total_apps} />
+
+          <MarketplaceMembershipCard membership={membership} compact />
 
         <section className="relative overflow-hidden rounded-2xl border border-mp-home-border bg-mp-home-surface p-4 sm:p-5 motion-safe:animate-[mp-fade-up_420ms_ease-out_both]">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-mp-home-accent/60 to-transparent" aria-hidden />

@@ -14,7 +14,7 @@ import { AuthShell, GoogleAuthButton, LoginAlerts, useLoginPage } from '@modules
 import { validateRequest } from '@lib/helpers/_parse-request.helper'
 import { LoginSchema } from '@lib/schemas/auth.schemas'
 
-import { type CONFIG_LOGIN_USER, type DataWithResponseInit } from '@types'
+import { type CONFIG_LOGIN_USER, type DataWithResponseInit, type MarketplaceMembershipSnapshot } from '@types'
 
 const normalizeAccessStatus = (value: string | undefined): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
   if (value === 'APPROVED' || value === 'PENDING' || value === 'REJECTED' || value === 'REVOKED') {
@@ -30,6 +30,18 @@ const normalizeRole = (value: string | undefined): 'USER' | 'ADMIN' | 'SUPERADMI
   }
 
   return 'USER'
+}
+
+const resolveSubappAccessStatus = (membership: MarketplaceMembershipSnapshot | null): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
+  if (!membership) {
+    return 'NONE'
+  }
+
+  if (membership.access_status === 'APPROVED' && !membership.can_access_subapps) {
+    return 'REVOKED'
+  }
+
+  return normalizeAccessStatus(membership.access_status)
 }
 
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response | null> {
@@ -61,7 +73,7 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response 
 export async function action({ request }: ActionFunctionArgs): Promise<Response | DataWithResponseInit<CONFIG_LOGIN_USER.RequestResponse>> {
   const { loginController } = await import('@/core/auth/auth.server')
   const { userSessionStorage } = await import('@/core/auth/cookie.server')
-  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
+  const { CLS_GetMarketplaceMembershipSnapshot } = await import('@/core/marketplace/marketplace.server')
   const { getReturnToFromRequest, serializeSubappSessionCookie } = await import('@/core/auth/subapp-session.server')
 
   const validation = await validateRequest(request, LoginSchema)
@@ -92,8 +104,8 @@ export async function action({ request }: ActionFunctionArgs): Promise<Response 
     let accessStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' = 'APPROVED'
 
     if (normalizedUser.role !== 'ADMIN' && normalizedUser.role !== 'SUPERADMIN') {
-      const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: normalizedUser.id }).main()
-      accessStatus = normalizeAccessStatus(accessResult.data?.access_status)
+      const membershipResult = await new CLS_GetMarketplaceMembershipSnapshot({ user_id: normalizedUser.id }).main()
+      accessStatus = resolveSubappAccessStatus(membershipResult.data ?? null)
     }
 
     const subappCookie = await serializeSubappSessionCookie({

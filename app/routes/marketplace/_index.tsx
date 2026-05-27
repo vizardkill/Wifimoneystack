@@ -1,9 +1,11 @@
 import type { JSX } from 'react'
 
 import { data, type LoaderFunctionArgs } from 'react-router'
-import { useLoaderData } from 'react-router'
+import { useLoaderData, useOutletContext } from 'react-router'
 
 import { buildCuratedHomeViewModel, MarketplaceHomeShell, parseMarketplaceHomeDiscoveryState } from '@modules/marketplace'
+
+import type { MarketplaceLayoutOutletContext } from './_layout'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getSession } = await import('@/core/auth/cookie.server')
@@ -41,6 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function MarketplaceIndexPage(): JSX.Element {
   const { viewModel, error } = useLoaderData<typeof loader>()
+  const { membership } = useOutletContext<MarketplaceLayoutOutletContext>()
 
-  return <MarketplaceHomeShell viewModel={viewModel} error={error} />
+  return <MarketplaceHomeShell viewModel={viewModel} error={error} membership={membership} />
 }

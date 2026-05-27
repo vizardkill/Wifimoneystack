@@ -36,6 +36,7 @@ export default [
   // ── Marketplace (catálogo de apps para usuarios aprobados) ─────────────────
   layout('./routes/marketplace/_layout.tsx', [
     route('marketplace', './routes/marketplace/_index.tsx'),
+    route('marketplace/profile', './routes/marketplace/profile.tsx'),
     route('marketplace/apps/:appId', './routes/marketplace/apps/$appId.tsx'),
     route('marketplace/apps/:appId/use', './routes/marketplace/apps/$appId.use.ts'),
     route('marketplace/apps/:appId/download', './routes/marketplace/apps/$appId.download.ts')

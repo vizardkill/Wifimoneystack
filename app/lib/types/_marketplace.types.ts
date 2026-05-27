@@ -56,6 +56,43 @@ export namespace CONFIG_GET_MARKETPLACE_ACCESS_STATUS {
   }
 }
 
+export type MarketplaceMembershipReminderVariant = 'pending' | 'healthy' | 'warning' | 'expired'
+
+export type MarketplaceMembershipSnapshot = {
+  access_status: 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE'
+  subscription_status: 'ACTIVE' | 'EXPIRED' | 'NONE'
+  starts_at: Date | null
+  expires_at: Date | null
+  days_remaining: number
+  total_days: number
+  percent_remaining: number
+  reminder_variant: MarketplaceMembershipReminderVariant
+  renewal_flow: 'manual_pending'
+  can_access_marketplace: boolean
+  can_access_subapps: boolean
+}
+
+// ── US1: Snapshot de vigencia/comercial ───────────────────────────────────────
+
+export namespace CONFIG_GET_MARKETPLACE_MEMBERSHIP_SNAPSHOT {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    user_id: string
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    data?: MarketplaceMembershipSnapshot
+  }
+}
+
 // ── US2: Listar apps publicadas ────────────────────────────────────────────────
 
 export namespace CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS {

@@ -3,17 +3,9 @@ import { type LoaderFunctionArgs, redirect } from 'react-router'
 export async function loader({ request }: LoaderFunctionArgs): Promise<Response> {
   const { getSession } = await import('@/core/auth/cookie.server')
   const { verifyUserToken } = await import('@/core/auth/verify_token.server')
-  const { CLS_GetMarketplaceAccessStatus } = await import('@/core/marketplace/marketplace.server')
+  const { CLS_GetMarketplaceMembershipSnapshot } = await import('@/core/marketplace/marketplace.server')
   const { attachSubappTokenToReturnTo, createSubappSessionToken, getReturnToFromRequest, serializeSubappSessionCookieFromToken } =
     await import('@/core/auth/subapp-session.server')
-
-  const normalizeAccessStatus = (value: string | undefined): 'APPROVED' | 'PENDING' | 'REJECTED' | 'REVOKED' | 'NONE' => {
-    if (value === 'APPROVED' || value === 'PENDING' || value === 'REJECTED' || value === 'REVOKED') {
-      return value
-    }
-
-    return 'NONE'
-  }
 
   const safeReturnTo = getReturnToFromRequest(request)
 
@@ -53,18 +45,24 @@ export async function loader({ request }: LoaderFunctionArgs): Promise<Response>
     })
   }
 
-  const accessResult = await new CLS_GetMarketplaceAccessStatus({ user_id: user.id }).main()
-  const accessStatus = normalizeAccessStatus(accessResult.data?.access_status)
+  const membershipResult = await new CLS_GetMarketplaceMembershipSnapshot({ user_id: user.id }).main()
+  const membership = membershipResult.data
 
-  if (accessStatus !== 'APPROVED') {
+  if (membership?.access_status !== 'APPROVED') {
     const accessStatusRedirect = new URL('/access-status', request.url)
     accessStatusRedirect.searchParams.set('returnTo', safeReturnTo)
     return redirect(accessStatusRedirect.toString())
   }
 
+  if (!membership.can_access_subapps) {
+    const profileRedirect = new URL('/marketplace/profile', request.url)
+    profileRedirect.searchParams.set('returnTo', safeReturnTo)
+    return redirect(profileRedirect.toString())
+  }
+
   const sessionToken = await createSubappSessionToken({
     user,
-    marketplaceAccessStatus: accessStatus
+    marketplaceAccessStatus: 'APPROVED'
   })
   const setCookie = await serializeSubappSessionCookieFromToken(sessionToken)
   const redirectTarget = attachSubappTokenToReturnTo(safeReturnTo, sessionToken)

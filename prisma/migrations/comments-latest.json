@@ -360,6 +360,59 @@
       }
     ]
   },
+  "marketplace_user_subscriptions": {
+    "table": {
+      "tableName": "marketplace_user_subscriptions",
+      "comment": "Vigencia de acceso comercial al marketplace por usuario"
+    },
+    "columns": [
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "status",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "starts_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "expires_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "renewed_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "renewed_by_user_id",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "created_at",
+        "comment": ""
+      },
+      {
+        "tableName": "marketplace_user_subscriptions",
+        "columnName": "updated_at",
+        "comment": ""
+      }
+    ]
+  },
   "marketplace_apps": {
     "table": {
       "tableName": "marketplace_apps",
