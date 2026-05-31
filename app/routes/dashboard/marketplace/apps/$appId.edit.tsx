@@ -223,7 +223,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
 
     if (!parsed.success) {
-      return data({ error: true, message: 'Datos inválidos para registrar media.' }, { status: 400 })
+      return data({ error: true, message: parsed.error.issues[0]?.message ?? 'Datos inválidos para registrar media.' }, { status: 400 })
     }
 
     const result = await new CLS_RegisterMarketplaceAppMedia({

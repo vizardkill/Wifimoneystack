@@ -382,6 +382,22 @@ VALUES
     (SELECT "id" FROM seed_actor),
     NOW(),
     NOW()
+  ),
+  (
+    '7a0c57a3-85c0-4082-8604-f7a9a0a5cc53',
+    'dropi-stock-scanner',
+    'Dropi Stock Scanner - WiFi Money',
+    'Escanea productos en Dropi y filtra por disponibilidad para priorizar oportunidades reales.',
+    'Portal privado para instalar la extension que detecta stock y senales de venta en la busqueda de Dropi, permitiendo exportar un shortlist util para decisiones rapidas.',
+    'Ingresa al portal, descarga el ZIP firmado, instala la extension en Chrome y escanea https://app.dropi.co/dashboard/search para filtrar y exportar productos con stock.',
+    'WEB_LINK',
+    'ACTIVE',
+    'https://dropi-stock-scanner.wifimoneystack.com',
+    NOW(),
+    (SELECT "id" FROM seed_actor),
+    (SELECT "id" FROM seed_actor),
+    NOW(),
+    NOW()
   )
 ON CONFLICT ("slug")
 DO UPDATE SET

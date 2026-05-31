@@ -733,7 +733,7 @@ export function MediaGalleryManager({ draftMedia, appId, isSubmitting = false }:
                   id="external_video_url"
                   name="external_video_url"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
-                  placeholder="https://youtube.com/watch?v=..."
+                  placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
                 />
               </div>
 

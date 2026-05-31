@@ -140,7 +140,8 @@ const collectAllowedActionOrigins = (): string[] => {
     }
   }
 
-  const hostName = process.env.HOST_NAME.trim()
+  const hostNameValue = process.env.HOST_NAME
+  const hostName = typeof hostNameValue === 'string' ? hostNameValue.trim() : ''
   const hostPort = normalizePort(process.env.HOST_PORT)
   if (hostName) {
     allowList.add(hostName)
@@ -391,9 +392,18 @@ class AppServer {
               'https://storage.googleapis.com',
               'https://www.youtube.com/',
               'https://www.youtube-nocookie.com/',
-              'https://player.vimeo.com/'
+              'https://player.vimeo.com/',
+              'https://www.loom.com/',
+              'https://loom.com/'
             ],
-            frameSrc: ["'self'", 'https://www.youtube.com/', 'https://www.youtube-nocookie.com/', 'https://player.vimeo.com/'],
+            frameSrc: [
+              "'self'",
+              'https://www.youtube.com/',
+              'https://www.youtube-nocookie.com/',
+              'https://player.vimeo.com/',
+              'https://www.loom.com/',
+              'https://loom.com/'
+            ],
             fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com/'],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],

@@ -151,10 +151,13 @@ export const RegisterMarketplaceAppMediaSchema = z
   .object({
     app_id: MarketplaceAppIdSchema,
     media_type: z.enum(['ICON', 'SCREENSHOT', 'VIDEO']),
-    storage_key: z.preprocess((v) => (v === '' ? undefined : v), z.string().max(500, 'La llave de storage es demasiado larga').trim().optional()),
+    storage_key: z.preprocess((v) => (v === '' || v == null ? undefined : v), z.string().max(500, 'La llave de storage es demasiado larga').trim().optional()),
     public_url: OptionalPublicMediaUrlSchema,
     external_video_url: OptionalHttpsUrlSchema,
-    alt_text: z.preprocess((v) => (v === '' ? undefined : v), z.string().max(160, 'El texto alternativo no puede superar 160 caracteres').trim().optional()),
+    alt_text: z.preprocess(
+      (v) => (v === '' || v == null ? undefined : v),
+      z.string().max(160, 'El texto alternativo no puede superar 160 caracteres').trim().optional()
+    ),
     attach_to_draft: FormBooleanSchema.optional().default(true)
   })
   .superRefine((data, ctx) => {

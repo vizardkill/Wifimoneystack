@@ -57,21 +57,39 @@ interface GalleryMedia {
   alt: string
 }
 
+type SupportedVideoProvider = 'youtube' | 'loom'
+
+interface SupportedVideoEmbed {
+  provider: SupportedVideoProvider
+  embedUrl: string
+  thumbnailUrl: string | null
+}
+
+function normalizeVideoHost(hostname: string): string {
+  const normalized = hostname.toLowerCase()
+  return normalized.startsWith('www.') ? normalized.slice(4) : normalized
+}
+
 function extractYoutubeId(url: string): string | null {
   try {
     const parsed = new URL(url)
+    const host = normalizeVideoHost(parsed.hostname)
 
-    if (parsed.hostname.includes('youtu.be')) {
+    if (host === 'youtu.be') {
       return parsed.pathname.replace('/', '') || null
     }
 
-    if (parsed.hostname.includes('youtube.com')) {
+    if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
       if (parsed.searchParams.get('v')) {
         return parsed.searchParams.get('v')
       }
 
       if (parsed.pathname.startsWith('/embed/')) {
         return parsed.pathname.replace('/embed/', '') || null
+      }
+
+      if (parsed.pathname.startsWith('/shorts/')) {
+        return parsed.pathname.replace('/shorts/', '').split('/')[0] || null
       }
     }
 
@@ -81,12 +99,55 @@ function extractYoutubeId(url: string): string | null {
   }
 }
 
-function toYoutubeEmbedUrl(url: string): string | null {
-  const videoId = extractYoutubeId(url)
-  if (!videoId) {
+function extractLoomId(url: string): string | null {
+  try {
+    const parsed = new URL(url)
+    const host = normalizeVideoHost(parsed.hostname)
+
+    if (host !== 'loom.com') {
+      return null
+    }
+
+    const segments = parsed.pathname
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter((segment) => segment.length > 0)
+
+    if (segments.length < 2) {
+      return null
+    }
+
+    const [kind, rawId] = segments
+    if (kind !== 'share' && kind !== 'embed') {
+      return null
+    }
+
+    return /^[A-Za-z0-9]+$/.test(rawId) ? rawId : null
+  } catch {
     return null
   }
-  return `https://www.youtube.com/embed/${videoId}`
+}
+
+function toSupportedVideoEmbed(url: string): SupportedVideoEmbed | null {
+  const videoId = extractYoutubeId(url)
+  if (videoId) {
+    return {
+      provider: 'youtube',
+      embedUrl: `https://www.youtube.com/embed/${videoId}`,
+      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    }
+  }
+
+  const loomId = extractLoomId(url)
+  if (loomId) {
+    return {
+      provider: 'loom',
+      embedUrl: `https://www.loom.com/embed/${loomId}`,
+      thumbnailUrl: null
+    }
+  }
+
+  return null
 }
 
 function toListItems(text: string | null | undefined): string[] {
@@ -237,7 +298,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
 
   const activeMedia: GalleryMedia | null = galleryItems.length > 0 ? (galleryItems.find((media) => media.id === activeMediaId) ?? galleryItems[0]) : null
 
-  const activeVideoEmbed = activeMedia !== null && activeMedia.type === 'VIDEO' ? toYoutubeEmbedUrl(activeMedia.url) : null
+  const activeVideoEmbed = activeMedia !== null && activeMedia.type === 'VIDEO' ? toSupportedVideoEmbed(activeMedia.url) : null
 
   const primaryActionHref = app.access_mode === 'WEB_LINK' ? `/marketplace/apps/${app.id}/use` : `/marketplace/apps/${app.id}/download`
   const primaryActionLabel = app.access_mode === 'WEB_LINK' ? 'Abrir app' : 'Descargar ZIP'
@@ -366,7 +427,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                 {activeMedia ? (
                   activeMedia.type === 'VIDEO' && activeVideoEmbed ? (
                     <iframe
-                      src={activeVideoEmbed}
+                      src={activeVideoEmbed.embedUrl}
                       title={activeMedia.alt}
                       className="h-full w-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -405,7 +466,7 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
             <div className="grid grid-cols-3 gap-3 xl:grid-cols-1">
               {galleryItems.map((media) => {
                 const isActive = activeMedia !== null && media.id === activeMedia.id
-                const youtubeId = media.type === 'VIDEO' ? extractYoutubeId(media.url) : null
+                const supportedVideo = media.type === 'VIDEO' ? toSupportedVideoEmbed(media.url) : null
 
                 return (
                   <button
@@ -420,8 +481,8 @@ export function AppDetail({ app }: AppDetailProps): JSX.Element {
                     aria-label={`Vista previa ${media.type === 'VIDEO' ? 'de video' : 'de captura'}`}
                   >
                     {media.type === 'VIDEO' ? (
-                      youtubeId ? (
-                        <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={media.alt} className="aspect-video w-full object-cover" />
+                      supportedVideo?.thumbnailUrl ? (
+                        <img src={supportedVideo.thumbnailUrl} alt={media.alt} className="aspect-video w-full object-cover" />
                       ) : (
                         <div className="flex aspect-video w-full items-center justify-center bg-mp-home-surface text-mp-home-text">
                           <Play className="h-5 w-5" />
