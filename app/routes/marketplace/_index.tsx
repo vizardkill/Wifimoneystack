@@ -26,6 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const result = await new CLS_ListPublishedMarketplaceApps({
     user_id: user.id,
+    category: 'APP',
     page: 1,
     per_page: 240
   }).main()
