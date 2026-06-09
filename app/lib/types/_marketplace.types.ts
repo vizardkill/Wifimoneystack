@@ -1,4 +1,4 @@
-import type { MarketplaceAppAccessMode, MarketplaceAppStatus } from '@prisma/client'
+import type { MarketplaceAppAccessMode, MarketplaceAppCategory, MarketplaceAppStatus } from '@prisma/client'
 
 // ── US1: Solicitar acceso al marketplace ──────────────────────────────────────
 
@@ -107,6 +107,7 @@ export namespace CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS {
     user_id: string
     search?: string
     access_mode?: MarketplaceAppAccessMode
+    category?: MarketplaceAppCategory
     page?: number
     per_page?: number
   }
@@ -122,6 +123,7 @@ export namespace CONFIG_LIST_PUBLISHED_MARKETPLACE_APPS {
         name: string
         summary: string
         access_mode: MarketplaceAppAccessMode
+        category: MarketplaceAppCategory
         icon_url: string | null
         screenshot_count: number
       }>
@@ -224,11 +226,18 @@ export namespace CONFIG_GET_MARKETPLACE_APP_AUTHORING {
         name: string
         status: string
         access_mode: MarketplaceAppAccessMode
+        category: MarketplaceAppCategory
         web_url: string | null
         summary: string
         description: string
         instructions: string
         has_active_artifact: boolean
+        active_skill: {
+          name: string
+          description: string
+          version: string | null
+          allowed_tools: string[]
+        } | null
       }
       draft_storefront: {
         id: string | null
@@ -701,6 +710,7 @@ export namespace CONFIG_UPSERT_MARKETPLACE_APP {
     description: string
     instructions: string
     access_mode: MarketplaceAppAccessMode
+    category?: MarketplaceAppCategory
     web_url?: string
     actor_user_id: string
   }
@@ -713,6 +723,43 @@ export namespace CONFIG_UPSERT_MARKETPLACE_APP {
     data?: {
       app_id: string
       slug: string
+    }
+  }
+}
+
+// ── Skills: Registrar artefacto de skill de Claude (admin) ────────────────────
+
+export namespace CONFIG_REGISTER_MARKETPLACE_APP_SKILL_ARTIFACT {
+  export enum RequestStatus {
+    Pending = 'pending',
+    Error = 'error',
+    Forbidden = 'forbidden',
+    NotFound = 'not_found',
+    Validation = 'validation',
+    Completed = 'completed'
+  }
+
+  export type Payload = {
+    app_id: string
+    actor_user_id: string
+    file_name: string
+    file_bytes: Uint8Array
+    content_type?: string
+    version_label?: string
+  }
+
+  export type RequestResponse = {
+    error?: boolean
+    message?: string
+    status?: RequestStatus
+    field_errors?: Record<string, string>
+    data?: {
+      artifact_id: string
+      file_name: string
+      skill_name: string
+      skill_description: string
+      allowed_tools: string[]
+      version_label: string | null
     }
   }
 }

@@ -141,6 +141,34 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return data({ success: true, message: 'Datos base guardados correctamente.' })
   }
 
+  if (intent === 'upload_skill_artifact') {
+    const { CLS_RegisterMarketplaceAppSkillArtifact } = await import('@/core/marketplace/marketplace.server')
+
+    const fileEntry = formData.get('skill_package')
+    const versionRaw = formData.get('version_label')
+
+    if (!(fileEntry instanceof File) || fileEntry.size === 0) {
+      return data({ error: true, message: 'Selecciona el archivo .zip del skill.' }, { status: 400 })
+    }
+
+    const fileBytes = new Uint8Array(await fileEntry.arrayBuffer())
+
+    const result = await new CLS_RegisterMarketplaceAppSkillArtifact({
+      app_id: params.appId,
+      actor_user_id: user.id,
+      file_name: fileEntry.name,
+      file_bytes: fileBytes,
+      content_type: fileEntry.type || 'application/zip',
+      version_label: typeof versionRaw === 'string' ? versionRaw.trim() || undefined : undefined
+    }).main()
+
+    if (result.error) {
+      return data({ error: true, message: result.message ?? 'No se pudo registrar el skill.' }, { status: 400 })
+    }
+
+    return data({ success: true, message: `Skill "${result.data?.skill_name}" registrado correctamente.`, details: result.data })
+  }
+
   const {
     SaveMarketplaceAppStorefrontDraftSchema,
     PrepareMarketplaceAppMediaUploadSchema,

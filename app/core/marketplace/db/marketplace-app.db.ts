@@ -49,6 +49,7 @@ export class MarketplaceAppDB {
           description,
           instructions,
           access_mode: input.access_mode,
+          ...(input.category ? { category: input.category } : {}),
           web_url: input.web_url,
           updated_by_user_id: input.actor_user_id
         }
@@ -63,6 +64,7 @@ export class MarketplaceAppDB {
         description,
         instructions,
         access_mode: input.access_mode,
+        ...(input.category ? { category: input.category } : {}),
         web_url: input.web_url,
         created_by_user_id: input.actor_user_id
       }
@@ -153,12 +155,14 @@ export class MarketplaceAppDB {
   static async listPublished(params: {
     search?: string
     access_mode?: string
+    category?: string
     page: number
     per_page: number
   }): Promise<{ apps: MarketplaceApp[]; total: number }> {
     const where = {
       status: 'ACTIVE' as MarketplaceAppStatus,
       ...(params.access_mode ? { access_mode: params.access_mode as never } : {}),
+      ...(params.category ? { category: params.category as never } : {}),
       ...(params.search
         ? {
             OR: [{ name: { contains: params.search, mode: 'insensitive' as const } }, { summary: { contains: params.search, mode: 'insensitive' as const } }]
@@ -193,6 +197,20 @@ export class MarketplaceAppDB {
       db.marketplaceApp.count()
     ])
     return { apps, total }
+  }
+
+  /**
+   * Marcar una app como skill de Claude descargable (categoría + modo de acceso)
+   */
+  static async markAsClaudeSkill(id: string, actor_user_id: string): Promise<MarketplaceApp> {
+    return db.marketplaceApp.update({
+      where: { id },
+      data: {
+        category: 'CLAUDE_SKILL',
+        access_mode: 'PACKAGE_DOWNLOAD',
+        updated_by_user_id: actor_user_id
+      }
+    })
   }
 
   /**

@@ -24,17 +24,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const url = new URL(request.url)
   const manualMode = url.searchParams.get('manual') === '1'
+  const isSkill = url.searchParams.get('kind') === 'skill'
 
   if (!manualMode) {
     const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const result = await new CLS_UpsertMarketplaceApp({
       actor_user_id: user.id,
-      name: `Nueva app ${uniqueSuffix}`,
-      slug: `nueva-app-${uniqueSuffix}`,
-      summary: 'Pendiente de completar storefront.',
+      name: isSkill ? `Nuevo skill ${uniqueSuffix}` : `Nueva app ${uniqueSuffix}`,
+      slug: isSkill ? `nuevo-skill-${uniqueSuffix}` : `nueva-app-${uniqueSuffix}`,
+      summary: isSkill ? 'Pendiente de subir el paquete del skill.' : 'Pendiente de completar storefront.',
       description: '',
       instructions: '',
-      access_mode: 'WEB_LINK',
+      access_mode: isSkill ? 'PACKAGE_DOWNLOAD' : 'WEB_LINK',
+      category: isSkill ? 'CLAUDE_SKILL' : 'APP',
       web_url: undefined
     }).main()
 

@@ -159,6 +159,11 @@ enum MarketplaceAppAccessMode {
   PACKAGE_DOWNLOAD
 }
 
+enum MarketplaceAppCategory {
+  APP
+  CLAUDE_SKILL
+}
+
 enum MarketplaceMediaType {
   ICON
   SCREENSHOT
@@ -249,6 +254,7 @@ model MarketplaceApp {
   description         String
   instructions        String
   access_mode         MarketplaceAppAccessMode
+  category            MarketplaceAppCategory   @default(APP)
   status              MarketplaceAppStatus     @default(DRAFT)
   web_url             String?
   published_at        DateTime?
@@ -264,6 +270,7 @@ model MarketplaceApp {
   storefront_versions MarketplaceAppStorefrontVersion[]
 
   @@index([status, access_mode, created_at])
+  @@index([status, category, created_at])
   @@map("marketplace_apps")
 }
 
@@ -374,6 +381,7 @@ model MarketplaceAppArtifact {
   size_bytes          BigInt
   checksum            String?
   version_label       String?
+  skill_metadata      Json?
   is_active           Boolean        @default(true)
   created_by_user_id  String
   created_at          DateTime       @default(now())

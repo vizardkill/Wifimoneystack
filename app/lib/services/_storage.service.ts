@@ -321,7 +321,15 @@ function getStorageClient(): Storage {
   })
 }
 
-export type StorageFolder = 'exercises/videos' | 'exercises/thumbnails' | 'avatars' | 'attachments' | 'branding' | 'receipts' | 'marketplace/storefronts'
+export type StorageFolder =
+  | 'exercises/videos'
+  | 'exercises/thumbnails'
+  | 'avatars'
+  | 'attachments'
+  | 'branding'
+  | 'receipts'
+  | 'marketplace/storefronts'
+  | 'marketplace/artifacts'
 
 export interface SignedUploadUrlOptions {
   /** Nombre final del archivo en el bucket (sin carpeta) */

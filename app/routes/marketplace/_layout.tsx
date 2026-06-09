@@ -1,6 +1,6 @@
 import { type JSX, useMemo } from 'react'
 
-import { LogOut, ShoppingBag, UserCircle } from 'lucide-react'
+import { LogOut, ShoppingBag, Sparkles, UserCircle } from 'lucide-react'
 import { type LoaderFunctionArgs, redirect } from 'react-router'
 import { Form, Link, Outlet, useLoaderData } from 'react-router'
 
@@ -71,6 +71,13 @@ export default function MarketplaceLayout(): JSX.Element {
             <span className="font-heading font-bold text-lg text-mp-home-accent-strong">WiFiMoneyStack</span>
           </Link>
           <div className="flex items-center gap-4">
+            <Link
+              to="/marketplace/skills"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-mp-home-muted transition-colors hover:bg-mp-home-surface hover:text-mp-home-text"
+            >
+              <Sparkles className="h-4 w-4" />
+              Skills
+            </Link>
             <Link
               to="/marketplace/profile"
               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-mp-home-muted transition-colors hover:bg-mp-home-surface hover:text-mp-home-text"

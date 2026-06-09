@@ -34,6 +34,7 @@ test('CLS_GetMarketplaceDashboard devuelve KPI actuales y variación de 7 días'
         description: 'Sin actividad',
         instructions: 'Sin actividad',
         access_mode: 'WEB_LINK',
+        category: 'APP',
         status: 'ACTIVE',
         web_url: null,
         published_at: new Date('2026-01-01T00:00:00.000Z'),

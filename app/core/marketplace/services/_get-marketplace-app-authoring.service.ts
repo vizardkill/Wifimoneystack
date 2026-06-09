@@ -147,11 +147,24 @@ export class CLS_GetMarketplaceAppAuthoring {
           name: app.name,
           status: app.status,
           access_mode: app.access_mode,
+          category: app.category,
           web_url: app.web_url,
           summary: app.summary,
           description: app.description,
           instructions: app.instructions,
-          has_active_artifact: app.active_artifact !== null
+          has_active_artifact: app.active_artifact !== null,
+          active_skill:
+            app.active_artifact?.skill_metadata != null
+              ? (() => {
+                  const meta = app.active_artifact.skill_metadata as Record<string, unknown>
+                  return {
+                    name: typeof meta.name === 'string' ? meta.name : '',
+                    description: typeof meta.description === 'string' ? meta.description : '',
+                    version: typeof meta.version === 'string' ? meta.version : null,
+                    allowed_tools: Array.isArray(meta.allowed_tools) ? meta.allowed_tools.map((tool) => String(tool)) : []
+                  }
+                })()
+              : null
         },
         draft_storefront: {
           id: draft?.id ?? null,

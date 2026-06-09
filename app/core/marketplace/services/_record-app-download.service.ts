@@ -4,6 +4,7 @@ import { AppUsageEventDB } from '@/core/marketplace/db/app-usage-event.db'
 import { MarketplaceAppDB } from '@/core/marketplace/db/marketplace-app.db'
 
 import { trackError } from '@lib/functions/_track_error.function'
+import { getSignedReadUrl } from '@lib/services/_storage.service'
 
 import { CONFIG_RECORD_MARKETPLACE_APP_DOWNLOAD } from '@types'
 
@@ -95,14 +96,21 @@ export class CLS_RecordMarketplaceAppDownload {
 
   private async _buildResponse(): Promise<void> {
     const artifact = this._artifact!
-    this._statusRequest = CONFIG_RECORD_MARKETPLACE_APP_DOWNLOAD.RequestStatus.Completed
-    // NOTE: In production, download_url should be a signed/short-lived URL from storage provider
-    this._requestResponse = {
-      data: {
-        download_url: `/api/v1/storage/files?key=${encodeURIComponent(artifact.storage_key)}`,
-        file_name: artifact.file_name,
-        version_label: artifact.version_label
+
+    try {
+      const downloadUrl = await getSignedReadUrl(artifact.storage_key)
+      this._statusRequest = CONFIG_RECORD_MARKETPLACE_APP_DOWNLOAD.RequestStatus.Completed
+      this._requestResponse = {
+        data: {
+          download_url: downloadUrl,
+          file_name: artifact.file_name,
+          version_label: artifact.version_label
+        }
       }
+    } catch (err) {
+      this._statusRequest = CONFIG_RECORD_MARKETPLACE_APP_DOWNLOAD.RequestStatus.Error
+      this._requestResponse = { error: true, message: 'No se pudo generar el enlace de descarga.' }
+      trackError({ error: err as Error, method: 'CLS_RecordMarketplaceAppDownload._buildResponse', controller: 'marketplace' })
     }
   }
 }

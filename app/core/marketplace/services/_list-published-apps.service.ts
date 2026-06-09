@@ -72,6 +72,7 @@ export class CLS_ListPublishedMarketplaceApps {
       const result = await MarketplaceAppDB.listPublished({
         search: this._payload.search,
         access_mode: this._payload.access_mode,
+        category: this._payload.category,
         page: this._payload.page ?? 1,
         per_page: this._payload.per_page ?? 20
       })
@@ -99,6 +100,7 @@ export class CLS_ListPublishedMarketplaceApps {
           name: app.name,
           summary: app.summary,
           access_mode: app.access_mode,
+          category: app.category,
           icon_url: resolveMarketplaceMediaUrl(primaryIconUrl ?? fallbackScreenshotUrl),
           screenshot_count: screenshots.length
         }

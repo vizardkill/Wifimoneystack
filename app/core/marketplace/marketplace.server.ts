@@ -30,6 +30,7 @@ export { CLS_SaveMarketplaceAppStorefrontDraft } from './services/_save-storefro
 export { CLS_PublishMarketplaceAppStorefront } from './services/_publish-storefront.service'
 export { CLS_PrepareMarketplaceAppMediaUpload } from './services/_prepare-app-media-upload.service'
 export { CLS_RegisterMarketplaceAppMedia } from './services/_register-app-media.service'
+export { CLS_RegisterMarketplaceAppSkillArtifact } from './services/_register-app-skill-artifact.service'
 export { CLS_RemoveMarketplaceAppMedia } from './services/_remove-app-media.service'
 export { CLS_ReorderMarketplaceAppStorefrontMedia } from './services/_reorder-storefront-media.service'
 

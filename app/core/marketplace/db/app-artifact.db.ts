@@ -1,4 +1,4 @@
-import type { MarketplaceAppArtifact } from '@prisma/client'
+import type { MarketplaceAppArtifact, Prisma } from '@prisma/client'
 
 import { db } from '@/db.server'
 
@@ -17,6 +17,7 @@ export class AppArtifactDB {
     size_bytes: bigint
     checksum?: string
     version_label?: string
+    skill_metadata?: Prisma.InputJsonValue
     created_by_user_id: string
   }): Promise<MarketplaceAppArtifact> {
     // Desactivar artefactos previos
@@ -34,6 +35,7 @@ export class AppArtifactDB {
         size_bytes: input.size_bytes,
         checksum: input.checksum,
         version_label: input.version_label,
+        ...(input.skill_metadata !== undefined ? { skill_metadata: input.skill_metadata } : {}),
         created_by_user_id: input.created_by_user_id
       }
     })

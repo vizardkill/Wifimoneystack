@@ -5,6 +5,7 @@
 import type {
   MarketplaceAccessStatus,
   MarketplaceAppAccessMode,
+  MarketplaceAppCategory,
   MarketplaceAppStatus,
   MarketplaceAuditAction,
   MarketplaceMediaType,
@@ -71,6 +72,7 @@ export interface IMarketplaceApp {
   description: string
   instructions: string
   access_mode: MarketplaceAppAccessMode
+  category: MarketplaceAppCategory
   status: MarketplaceAppStatus
   web_url: string | null
   published_at: Date | null
@@ -93,6 +95,7 @@ export interface IUpsertMarketplaceAppInput {
   description: string
   instructions: string
   access_mode: MarketplaceAppAccessMode
+  category?: MarketplaceAppCategory
   web_url?: string
   actor_user_id: string
 }
@@ -227,6 +230,7 @@ export interface IMarketplaceAppArtifact {
   size_bytes: bigint
   checksum: string | null
   version_label: string | null
+  skill_metadata: unknown
   is_active: boolean
   created_by_user_id: string
   created_at: Date

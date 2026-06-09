@@ -3,7 +3,7 @@ import type { JSX } from 'react'
 import { ArrowLeft, Check, Loader2 } from 'lucide-react'
 import { Form, Link } from 'react-router'
 
-import { MediaGalleryManager, StorefrontAuthoringForm, StorefrontPreview, StorefrontReadinessPanel } from './components'
+import { MediaGalleryManager, SkillUploadPanel, StorefrontAuthoringForm, StorefrontPreview, StorefrontReadinessPanel } from './components'
 import { AUTHORING_STEP_LABELS, AUTHORING_STEPS, useAuthoringStepWizard } from './hooks/use-authoring-step-wizard'
 import { useMarketplaceBasicAppForm } from './hooks/use-marketplace-basic-app-form'
 
@@ -15,8 +15,15 @@ interface AuthoringData {
     summary: string
     status: string
     access_mode: 'WEB_LINK' | 'PACKAGE_DOWNLOAD'
+    category: 'APP' | 'CLAUDE_SKILL'
     web_url: string | null
     has_active_artifact: boolean
+    active_skill: {
+      name: string
+      description: string
+      version: string | null
+      allowed_tools: string[]
+    } | null
   }
   draft_storefront: {
     readiness_status: 'INCOMPLETE' | 'READY'
@@ -256,6 +263,12 @@ export function MarketplaceAppAuthoringShell({ authoring, isSubmitting, actionEr
               Guardar datos base
             </button>
           </Form>
+
+          {authoring.app.access_mode === 'PACKAGE_DOWNLOAD' && (
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <SkillUploadPanel hasActiveArtifact={authoring.app.has_active_artifact} activeSkill={authoring.app.active_skill} isSubmitting={isSubmitting} />
+            </div>
+          )}
         </section>
       )}
 
