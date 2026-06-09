@@ -429,4 +429,31 @@ DO UPDATE SET
   "updated_by_user_id" = EXCLUDED."updated_by_user_id",
   "updated_at" = NOW();
 
+-- Media (ícono + portada) para landing-forge
+INSERT INTO "marketplace_app_media" ("id","app_id","type","storage_key","public_url","alt_text","sort_order","updated_at")
+VALUES (
+  'c100bd69-30da-4d62-a54a-0c264b471d1e',
+  '9095ada7-3316-4b6d-92ef-fd230ea6e95e',
+  'ICON',
+  'marketplace/storefronts/landing-forge/icon.svg',
+  'https://storage.googleapis.com/wifimoneystack-marketplace-assets-172797712331/marketplace/storefronts/landing-forge/icon.svg',
+  'Ícono de Landing Forge',
+  0,
+  NOW()
+)
+ON CONFLICT ("id") DO NOTHING;
+
+INSERT INTO "marketplace_app_media" ("id","app_id","type","storage_key","public_url","alt_text","sort_order","updated_at")
+VALUES (
+  'bafdd179-2635-44b0-8860-d1c09dca07d5',
+  '9095ada7-3316-4b6d-92ef-fd230ea6e95e',
+  'SCREENSHOT',
+  'marketplace/storefronts/landing-forge/hero.svg',
+  'https://storage.googleapis.com/wifimoneystack-marketplace-assets-172797712331/marketplace/storefronts/landing-forge/hero.svg',
+  'Portada de Landing Forge',
+  0,
+  NOW()
+)
+ON CONFLICT ("id") DO NOTHING;
+
 COMMIT;
