@@ -398,6 +398,22 @@ VALUES
     (SELECT "id" FROM seed_actor),
     NOW(),
     NOW()
+  ),
+  (
+    '9095ada7-3316-4b6d-92ef-fd230ea6e95e',
+    'landing-forge',
+    'Landing Forge',
+    'Genera la landing page completa de un producto en HTML, con visuales creados por Higgsfield.',
+    'App que convierte el brief de un producto en una landing page de conversion lista para publicar: escribe el HTML/CSS completo y genera las piezas visuales de cada seccion con Higgsfield.',
+    'Carga producto, oferta y avatar, define tono y estilo visual, y genera una pagina completa que puedes previsualizar y descargar como HTML.',
+    'WEB_LINK',
+    'ACTIVE',
+    'https://landing-forge.wifimoneystack.com',
+    NOW(),
+    (SELECT "id" FROM seed_actor),
+    (SELECT "id" FROM seed_actor),
+    NOW(),
+    NOW()
   )
 ON CONFLICT ("slug")
 DO UPDATE SET
